@@ -4,7 +4,7 @@ socialapi-webrtc-demo
 This needs the latest Firefox 19 (currently the Nightly channel) to work.
 
 To start the server:
-$ node app.js
+$ env PORT=5000 AUDIENCE="http://localhost:5000" node app.js
 
 Then edit about:config:
 
@@ -18,6 +18,7 @@ value: {"location":"http://webrtc-social.herokuapp.com/manifest.json","name":"We
 
 Additionally, in about:config, set the following prefs:
 
+    social.enabled: true
     media.navigator.enabled: true
     media.navigator.permission.disabled: true
     media.peerconnection.enabled: true
