@@ -32,8 +32,9 @@ function onLoad() {
   });
 }
 
-function onContactDoubleClick(aEvent) {
-  var to = aEvent.target.id;
+function onContactClick(aEvent) {
+  var to = aEvent.target.value;
+  console.log("to = " + to);
   openChat(to, function(aWin) {
     var pc = new mozRTCPeerConnection();
     var win = gChats[to].win;
@@ -245,10 +246,15 @@ function setupEventSource()
     if (e.data in gContacts) {
       return;
     }
+    var button = document.createElement("button");
+    button.setAttribute("value", e.data);
+    button.textContent = e.data;
+    button.setAttribute("class", "userButton");
     var c = document.createElement("li");
     c.setAttribute("id", e.data);
-    c.textContent = e.data;
+    c.appendChild(button);
     document.getElementById("contacts").appendChild(c);
+    $("li > button").button().click(onContactClick);
     gContacts[e.data] = c;
   }, false);
 
