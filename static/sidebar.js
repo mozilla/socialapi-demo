@@ -263,7 +263,7 @@ function setupEventSource()
       return;
     }
     var c = gContacts[e.data];
-    c.parentNode.removeChild(c);
+    c.parentNode.parentNode.removeChild(c);
     delete gContacts[e.data];
   }, false);
 
