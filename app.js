@@ -39,8 +39,7 @@ app.get("/events", function(req, res) {
   // Setup event channel.
   res.writeHead(200, {
     "Content-Type": "text/event-stream",
-    "Cache-Control": "no-cache",
-    "Connection": "keep-alive"
+    "Cache-Control": "no-cache"
   });
 
   // Ping every 1 second.

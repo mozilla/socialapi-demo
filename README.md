@@ -18,15 +18,7 @@ Quick Start
 
 4. Set the SocialAPI provider, also via about:config. It's ok that the provider is named "facebook", the SocialAPI grabs the first pref prefixed with social.manifest. Note that the pref is actually a JSON string.
 
-        social.manifest.facebook: {
-          "location":"http://webrtc-social.herokuapp.com/manifest.json",
-          "name":"WebRTC Social Demo",
-          "iconURL":"http://webrtc-social.herokuapp.com/icon.png",
-          "workerURL":"http://webrtc-social.herokuapp.com/worker.js",
-          "sidebarURL":"http://webrtc-social.herokuapp.com/sidebar.htm",
-          "origin":"http://webrtc-social.herokuapp.com",
-          "enabled":true,"last_modified":135101330568
-        }
+        social.manifest.facebook: {"location":"https://webrtc-demo.vcap.mozillalabs.com/manifest.json","name":"WebRTC Social Demo","iconURL":"https://webrtc-demo.vcap.mozillalabs.com/icon.png","workerURL":"https://webrtc-demo.vcap.mozillalabs.com/worker.js","sidebarURL":"https://webrtc-demo.vcap.mozillalabs.com/sidebar.htm","origin":"https://webrtc-demo.vcap.mozillalabs.com","enabled":true,"last_modified":135101330568}
 
 5. Restart the browser.
 
