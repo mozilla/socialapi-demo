@@ -119,6 +119,7 @@ function setupDataChannel(originator, pc, target) {
       } catch(e) {}
       return false;
     };
+    win.document.getElementById("localChat").removeAttribute("disabled");
   };
 
   pc.onclosedconnection = function() {
@@ -402,4 +403,3 @@ function notify(type) {
       break;
   }
 }
-
