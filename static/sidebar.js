@@ -2,24 +2,22 @@ var gContacts = {};
 var gChats = {};
 var gUsername = "";
 
+function onPersonaLogin(assertion) {
+  remoteLogin({assertion: assertion});
+}
+
+function onPersonaLogout(assertion) {
+  if (gUsername)
+    remoteLogout();
+}
+
 function onLoad() {
   var worker = navigator.mozSocial.getWorker();
   if (!worker) {
     document.body.style.border = "3px solid red";
   }
 
-  if (navigator.id) {
-    navigator.id.watch({
-      loggedInUser: null,
-      onlogin: function(assertion) {
-        remoteLogin({assertion: assertion});
-      },
-      onlogout: function() {
-        if (gUsername)
-          remoteLogout();
-      }
-    });
-  }
+  watchPersonaLogins(onPersonaLogin, onPersonaLogout);
 }
 
 function onContactClick(aEvent) {
@@ -58,48 +56,6 @@ function callPerson(aPerson) {
   });
 }
 
-function getAudioVideo(aWin, aPC, aSuccessCallback, aCanFake) {
-  try {
-    getVideo(aWin, function(stream) {
-      var video = aWin.document.getElementById("localVideo");
-      video.mozSrcObject = stream;
-      video.play();
-      aPC.addStream(stream);
-      getAudio(aWin, function(stream) {
-        var audio = aWin.document.getElementById("localAudio");
-        audio.mozSrcObject = stream;
-        audio.play();
-        aPC.addStream(stream);
-        aSuccessCallback();
-      }, function(err) { alert("failed to get microphone: " + err); }, true);
-    }, function(err) { alert("failed to get camera: " + err); }, true);
-  } catch(e) { alert(e); }
-}
-
-function getVideo(aWin, aSuccessCallback, aErrorCallback, aCanFake) {
-  aWin.navigator.mozGetUserMedia({video: true}, function(stream) {
-    aSuccessCallback(stream);
-  }, function(err) {
-    if (aCanFake && err == "HARDWARE_UNAVAILABLE") {
-      aWin.navigator.mozGetUserMedia({video: true, fake: true}, aSuccessCallback, aErrorCallback);
-    } else {
-      aErrorCallback(err);
-    }
-  });
-}
-
-function getAudio(aWin, aSuccessCallback, aErrorCallback, aCanFake) {
-  aWin.navigator.mozGetUserMedia({audio: true}, function(stream) {
-    aSuccessCallback(stream);
-  }, function(err) {
-    if (aCanFake && err == "HARDWARE_UNAVAILABLE") {
-      aWin.navigator.mozGetUserMedia({audio: true, fake: true}, aSuccessCallback, aErrorCallback);
-    } else {
-      aErrorCallback(err);
-    }
-  });
-}
-
 function startGuest() {
   $("#signin").hide();
   $("#guest").html(
@@ -111,10 +67,6 @@ function startGuest() {
 function guestLogin() {
   var user = $("#user").attr("value");
   remoteLogin({assertion: user, fake: true});
-}
-
-function signin() {
-  navigator.id.request();
 }
 
 function signedIn(aEmail) {
@@ -135,11 +87,6 @@ function signedIn(aEmail) {
 }
 
 function signedOut() {
-}
-
-function signout() {
-  navigator.id.logout();
-
   delete gContacts[gUsername];
   gUsername = "";
 
