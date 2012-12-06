@@ -194,6 +194,47 @@ function setupFileSharing(win, dc, target) {
       dc.send(JSON.stringify({type: "url", url: url}));
     }
   }
+
+  win.document.getElementById("fullTab").onclick = function() {
+    var tab = window.open(win.location);
+    tab.addEventListener("DOMContentLoaded", function() {
+      tab.document.title = win.document.title;
+
+      var video = win.document.getElementById("remoteVideo");
+      var newVideo = tab.document.getElementById("remoteVideo");
+      newVideo.mozSrcObject = video.mozSrcObject;
+      newVideo.play();
+      newVideo.setAttribute("style", "position: fixed; top: 0; left: 0; z-index: 1; background: black;");
+
+      var localVideo = win.document.getElementById("localVideo");
+      var newLocalVideo = tab.document.getElementById("localVideo");
+      newLocalVideo.mozSrcObject = localVideo.mozSrcObject;
+      newLocalVideo.play();
+
+      var resizeVideo = function() {
+        var height = tab.innerHeight;
+        var width = tab.innerWidth;
+        var doc = tab.document;
+
+        newVideo.setAttribute("width", width);
+        newVideo.setAttribute("height", height);
+
+        newLocalVideo.setAttribute("width", "108");
+        newLocalVideo.setAttribute("height", "81");
+        newLocalVideo.setAttribute("style", "position: fixed; z-index: 2;");
+        newLocalVideo.style.top = (height - 81) + "px";
+        newLocalVideo.style.left = (width - 108) + "px";
+      };
+      resizeVideo();
+      tab.addEventListener("resize", resizeVideo);
+
+      var button = tab.document.getElementById("fullTab");
+      button.onclick = function() {
+        tab.document.getElementById("video").mozRequestFullScreen();
+      };
+      button.textContent = "Full screen";
+    });
+  };
 }
 
 function setupEventSource() {

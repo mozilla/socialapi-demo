@@ -32,6 +32,19 @@
       z-index: 3;
       background-color: rgba(200, 54, 54, 0.5);
     }
+    #fullTab {
+      position: absolute;
+      top: -1px;
+      right: 0;
+      z-index: 3;
+      text-shadow: 0 1px rgba(255, 255, 255, .4);
+      box-shadow: 0 0px 0.4em white;
+      background: rgba(255,255,255,.4);
+      border-radius: 5px;
+      margin: 0 3px;
+      padding: 0 2px;
+      cursor: pointer;
+    }
     p {
       text-align: center;
     }
@@ -58,10 +71,13 @@
 
 <body>
 <div id="content">
-  <video id="remoteVideo" width="258" height="194"></video>
-  <video id="localVideo" width="75" height="54"></video>
+  <div id="video">
+    <video id="remoteVideo" width="258" height="194"></video>
+    <video id="localVideo" width="75" height="54"></video>
+  </div>
 
   <div id="fileDrop"><p>&nbsp;</p><p>Drop a file here!</p></div>
+  <div id="fullTab">expand</div>
 
   <audio id="localAudio" muted></audio>
   <audio id="remoteAudio"></audio>
