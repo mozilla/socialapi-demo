@@ -148,18 +148,25 @@ function logout(req, res) {
     }
     return;
   }
-  debugLog("Logging out " + req.session.user);
 
   var user = req.session.user;
-  req.session.destroy(function() {
-// XXX Do we need this if events does it for us.
-//    delete users[user];
-// XXX Only notify if this is the last instance of the user.
-    notifyAllAbout(user, "userleft");
-    if (res) {
-      res.send(200);
-    }
-  });
+  // Only destroy the session if this is the last channel for the user
+  // XXX This will fail if the user logs in via two different clients. We need to store
+  // the session id or information in the user data as well. Or key by user, session and port.
+  if (!findResponseChannelForUser(user)) {
+    req.session.destroy(function() {
+      debugLog("Logging out " + user);
+
+      // XXX Do we need this if events does it for us.
+      //    delete users[user];
+      notifyAllAbout(user, "userleft");
+      if (res) {
+        res.send(200);
+      }
+    });
+  } else if (res) {
+    res.send(200);
+  }
 }
 
 app.post("/logout", logout);
@@ -180,6 +187,7 @@ app.listen(port, function() {
 
 function processRequest(req, res, type) {
   if (!req.session.user) {
+    debugLog("Unathorized request for " + type);
     res.send(401, "Unauthorized, " + type + " access denied");
     return;
   }
