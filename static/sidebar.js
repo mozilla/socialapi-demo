@@ -195,7 +195,9 @@ function setupFileSharing(win, dc, target) {
       dc.send(JSON.stringify({type: "url", url: url}));
     }
   }
+}
 
+function setupExpandHandler(win) {
   win.document.getElementById("fullTab").onclick = function() {
     var tab = window.open(win.location);
     tab.addEventListener("DOMContentLoaded", function() {
@@ -386,6 +388,7 @@ function openChat(aTarget, aCallback) {
   navigator.mozSocial.openChatWindow("./chatWindow.html?id="+(aTarget), function(win) {
     gChats[aTarget] = {win: win, pc: null};
     win.document.title = aTarget;
+    setupExpandHandler(win);
     win.addEventListener("unload", function() {
       if (!(aTarget in gChats))
         return;
