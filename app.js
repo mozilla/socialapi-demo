@@ -179,6 +179,10 @@ app.post("/answer", function(req, res) {
   processRequest(req, res, "answer");
 });
 
+app.post("/stopcall", function(req, res) {
+  processRequest(req, res, "stopcall");
+});
+
 app.listen(port, function() {
   debugLog("Port is " + port + " with audience " + audience);
 });
@@ -192,7 +196,7 @@ function processRequest(req, res, type) {
     return;
   }
 
-  if (!req.body.to || !req.body.from || !req.body.request) {
+  if (!req.body.to || (!req.body.request && type != "stopcall")) {
     res.send(400, "Invalid " + type + " request");
     return;
   }
@@ -203,6 +207,7 @@ function processRequest(req, res, type) {
     return;
   }
 
+  req.body.from = req.session.user;
   channelWrite(channel, type, JSON.stringify(req.body));
   res.send(200);
 }

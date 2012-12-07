@@ -49,7 +49,7 @@ function callPerson(aPerson) {
       pc.createOffer(function(offer) {
         pc.setLocalDescription(offer, function() {
           $.ajax({type: 'POST', url: '/offer',
-                  data: {to: aPerson, from: gUsername, request: JSON.stringify(offer)}});},
+                  data: {to: aPerson, request: JSON.stringify(offer)}});},
           function(err) { alert("setLocalDescription failed: " + err); });
       }, function(err) { alert("createOffer failed: " + err); });
     });
@@ -292,7 +292,7 @@ function setupEventSource() {
           pc.createAnswer(function(answer) {
             pc.setLocalDescription(answer, function() {
               $.ajax({type: 'POST', url: '/answer',
-                      data: {to: data.from, from: data.to, request: JSON.stringify(answer)}});
+                      data: {to: data.from, request: JSON.stringify(answer)}});
               pc.connectDataConnection(5001,5000);
             }, function(err) {alert("failed to setLocalDescription, " + err);});
           }, function(err) {alert("failed to createAnswer, " + err);});
@@ -316,6 +316,20 @@ function setupEventSource() {
     var data = JSON.parse(e.data);
     callPerson(data.who);
   }, false);
+
+  source.addEventListener("stopcall", function(e) {
+    var data = JSON.parse(e.data);
+    var chat = gChats[data.from];
+    if (!chat) {
+      alert("chat to close doesn't exist");
+      return;
+    }
+    chat.pc.close();
+    if (chat.dc)
+      chat.dc.close();
+    delete gChats[data.from];
+    chat.win.close();
+  });
 }
 
 function userIsConnected(userdata) {
@@ -372,6 +386,16 @@ function openChat(aTarget, aCallback) {
   navigator.mozSocial.openChatWindow("./chatWindow.html?id="+(aTarget), function(win) {
     gChats[aTarget] = {win: win, pc: null};
     win.document.title = aTarget;
+    win.addEventListener("unload", function() {
+      if (!(aTarget in gChats))
+        return;
+      $.ajax({type: 'POST', url: '/stopcall', data: {to: aTarget}});
+      var chat = gChats[aTarget];
+      chat.pc.close();
+      if (chat.dc)
+        chat.dc.close();
+      delete gChats[aTarget];
+    });
     if (aCallback) {
       aCallback(win);
     }
