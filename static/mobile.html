@@ -1,6 +1,10 @@
 <html>
 <head>
-  <title>Mobile</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, width=device-width" />
+
+  <link href="mobile.css" rel="stylesheet" type="text/css">
+
   <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
   <script src="./js/jquery-ui-1.9.1.custom.js"></script>
   <script src="./media.js" type="text/javascript"></script>
@@ -8,26 +12,37 @@
   <script src="./personaHandler.js" type="text/javascript"></script>
   <script src="./serverConnections.js" type="text/javascript"></script>
   <script src="https://login.persona.org/include.js"></script>
+
+  <title>Mobile WebRTC</title>
 </head>
 
 <body onload="onLoad()">
+<div id="header">
+  <img id="userimg" src="./user.png"/>
+  <div id="nouserid">Welcome!</div>
+  <div id="useridbox" style="display:none">
+  </div>
   <div id="signin">
     <img src="https://developer.mozilla.org/files/3967/plain_sign_in_black.png" onclick="signin()"/>
     <div id="signin_error"></div>
  </div>
-  <div>
- </div>
-<img src="./user.png"/>
-<div id="header">
-  <div id="useridbox" style="display:none"></div>
-  <div id="nouserid">Welcome!</div>
-  <div><button id="signout" onclick="signout()" style="display:none">signout</button></div>
+  <div id="signout" style="display:none"><button onclick="signout()">signout</button></div>
 </div>
-<ul id="contacts" style="margin-top:20px;"></ul>
-<div id="content" style="display:none">
-  <video id="remoteVideo" width="258" height="194"></video>
-  <video id="localVideo" width="75" height="54"></video>
-
+<div id="contacts">
+Users:
+<ul id="contactslist"></ul>
+</div>
+<div id="call" style="display:none">
+  <div id="remoteVideoContainer">
+    <video id="remoteVideo"></video>
+  </div>
+  <div id="localVideoContainer">
+    <video id="localVideo"></video>
+  </div>
+  <!--
+  This currently causes a crash due to bug 807238, it can be uncommented once we fix the crash.
+  <button id="closecall" onclick="closeCall();">End Call</button>
+  -->
   <audio id="localAudio" muted></audio>
   <audio id="remoteAudio"></audio>
 </div>

@@ -1,0 +1,48 @@
+#userimg {
+  float: left;
+  margin: 10px;
+}
+
+button {
+  font-size: 18px;
+  margin: auto 5px;
+}
+
+#header {
+  overflow: hidden;
+  height: auto;
+}
+
+#contactslist {
+  list-style-type: none;
+  padding: 0px;
+}
+
+#remoteVideo {
+  max-width: 100%;
+}
+
+#localVideo {
+  max-width: 50%;
+}
+
+/*
+ * 946 is the max width of the center area plus its padding
+ */
+@media screen and (max-width: 946px) {
+}
+
+/*
+ * 620 catches most mobile devices in landscape mode.
+ */
+@media screen and (max-width: 620px) {
+}
+
+/*
+ * 505 catches mobile devices in portrait mode
+ */
+@media screen and (max-width: 479px) {
+  #userimg {
+    float:none;
+  }
+}

@@ -36,3 +36,7 @@ function signOutFailure(xhr, status, err) {
   }
   alert("Sign out failure: " + err);
 }
+
+function stopCall(aUser) {
+  $.ajax({type: 'POST', url: '/stopcall', data: {to: aUser}});
+}
