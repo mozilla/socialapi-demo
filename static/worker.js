@@ -1,6 +1,4 @@
 /* import a helper library */
-importScripts("workerScript.js");
-
 // This keeps a list of all the ports that have connected to us
 var apiPort;
 
@@ -119,6 +117,6 @@ var handlers = {
 
 // lets watch for cookie updates here, polling kinda sucks
 function checkCookies() {
-  apiPort.postMessage({topic: 'social.cookies-get'});  
+  apiPort.postMessage({topic: 'social.cookies-get'});
 }
 setInterval(checkCookies, 1000);

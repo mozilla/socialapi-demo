@@ -293,9 +293,17 @@ function setupEventSource() {
         getAudioVideo(win, pc, function() {
           pc.createAnswer(function(answer) {
             pc.setLocalDescription(answer, function() {
+              var randomPort = function() {
+                return Math.round(Math.random() * 60535) + 5000;
+              };
+              var localPort = randomPort();
+              var remotePort = randomPort();
+              while (remotePort == localPort) // Avoid being extremely unlucky...
+                remotePort = randomPort();
               $.ajax({type: 'POST', url: '/answer',
-                      data: {to: data.from, request: JSON.stringify(answer)}});
-              pc.connectDataConnection(5001,5000);
+                      data: {to: data.from, request: JSON.stringify(answer),
+                             callerPort: remotePort, calleePort: localPort}});
+              pc.connectDataConnection(localPort, remotePort);
             }, function(err) {alert("failed to setLocalDescription, " + err);});
           }, function(err) {alert("failed to createAnswer, " + err);});
         }, true);
@@ -310,7 +318,7 @@ function setupEventSource() {
       // Nothing to do for the audio/video. The interesting things for
       // them will happen in onaddstream.
       // We need to establish the data connection though.
-      pc.connectDataConnection(5000,5001);
+      pc.connectDataConnection(data.callerPort, data.calleePort);
     }, function(err) {alert("failed to setRemoteDescription with answer, " + err);});
   }, false);
 
@@ -323,7 +331,7 @@ function setupEventSource() {
     var data = JSON.parse(e.data);
     var chat = gChats[data.from];
     if (!chat) {
-      alert("chat to close doesn't exist");
+      // The chat to close doesn't exist any more...
       return;
     }
     chat.pc.close();
