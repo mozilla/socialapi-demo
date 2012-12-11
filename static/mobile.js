@@ -48,6 +48,9 @@ function callPerson(aPerson) {
 
   gChat = {who: aPerson};
 
+  $("#calling").show();
+  document.getElementById("calleeName").textContent = aPerson;
+
   $("#call").show();
   $("#header").hide();
   $("#contacts").hide();
@@ -144,41 +147,46 @@ function setupEventSource() {
       return;
 
     var data = JSON.parse(e.data);
-
     gChat = {who: data.from};
 
-    $("#call").show();
-    $("#header").hide();
-    $("#contacts").hide();
+    $("#callAnswer").show();
+    document.getElementById("callerName").textContent = data.from;
+    document.getElementById("reject").onclick = function() {closeCall();};
+    document.getElementById("accept").onclick = function() {
+      $("#callAnswer").hide();
+      $("#call").show();
+      $("#header").hide();
+      $("#contacts").hide();
 
-    var pc = new window.mozRTCPeerConnection();
-    pc.onaddstream = function(obj) {
-      var type = obj.type;
-      if (type == "video") {
-        var video = document.getElementById("remoteVideo");
-        video.mozSrcObject = obj.stream;
-        video.play();
-      } else if (type == "audio") {
-        var audio = document.getElementById("remoteAudio");
-        audio.mozSrcObject = obj.stream;
-        audio.play();
-      } else {
-        alert("receiver onaddstream of unknown type, obj = " + obj.toSource());
-      }
+      var pc = new window.mozRTCPeerConnection();
+      pc.onaddstream = function(obj) {
+        var type = obj.type;
+        if (type == "video") {
+          var video = document.getElementById("remoteVideo");
+          video.mozSrcObject = obj.stream;
+          video.play();
+        } else if (type == "audio") {
+          var audio = document.getElementById("remoteAudio");
+          audio.mozSrcObject = obj.stream;
+          audio.play();
+        } else {
+          alert("receiver onaddstream of unknown type, obj = " + obj.toSource());
+        }
+      };
+      setupDataChannel(false, pc, data.from);
+      gChat.pc = pc;
+      pc.setRemoteDescription(JSON.parse(data.request), function() {
+        getAudioVideo(window, pc, function() {
+          pc.createAnswer(function(answer) {
+            pc.setLocalDescription(answer, function() {
+              $.ajax({type: 'POST', url: '/answer',
+                      data: {to: data.from, request: JSON.stringify(answer)}});
+              pc.connectDataConnection(5001,5000);
+            }, function(err) {alert("failed to setLocalDescription, " + err);});
+          }, function(err) {alert("failed to createAnswer, " + err);});
+        }, true);
+      }, function(err) {alert("failed to setRemoteDescription, " + err);});
     };
-    setupDataChannel(false, pc, data.from);
-    gChat.pc = pc;
-    pc.setRemoteDescription(JSON.parse(data.request), function() {
-      getAudioVideo(window, pc, function() {
-        pc.createAnswer(function(answer) {
-          pc.setLocalDescription(answer, function() {
-            $.ajax({type: 'POST', url: '/answer',
-                    data: {to: data.from, request: JSON.stringify(answer)}});
-            pc.connectDataConnection(5001,5000);
-          }, function(err) {alert("failed to setLocalDescription, " + err);});
-        }, function(err) {alert("failed to createAnswer, " + err);});
-      }, true);
-    }, function(err) {alert("failed to setRemoteDescription, " + err);});
   }, false);
 
   source.addEventListener("answer", function(e) {
@@ -211,18 +219,26 @@ function closeCall() {
 }
 
 function endCall() {
+  $("#callAnswer").hide();
+  $("#calling").hide();
+  document.getElementById("accept").onclick = null;
+  document.getElementById("reject").onclick = null;
+
   const mediaElements = ["remoteVideo", "localVideo", "remoteAudio", "localAudio"];
   mediaElements.forEach(function (aElemId) {
     var element = document.getElementById(aElemId);
     element.pause();
     if (aElemId.indexOf("local") != -1) {
-      gChat.pc.removeStream(element.mozSrcObject);
-      element.mozSrcObject.stop();
+      if (gChat.pc)
+        gChat.pc.removeStream(element.mozSrcObject);
+      if (element.mozSrcObject)
+        element.mozSrcObject.stop();
     }
     element.mozSrcObject = null;
   });
 
-  gChat.pc.close();
+  if (gChat.pc)
+    gChat.pc.close();
   // XXX Don't need to close data connection just yet.
   gChat = null;
 

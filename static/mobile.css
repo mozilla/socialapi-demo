@@ -26,6 +26,11 @@ button {
   max-width: 50%;
 }
 
+#callAnswer, #calling {
+  display: none;
+  padding-top: 1em;
+}
+
 /*
  * 946 is the max width of the center area plus its padding
  */

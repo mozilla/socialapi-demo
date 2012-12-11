@@ -22,6 +22,32 @@
       left: 186px;
       z-index: 2;
     }
+    #callAnswer, #calling {
+      display: none;
+      position: fixed;
+      z-index: 4;
+      font-size: xx-large;
+      text-align: center;
+      width: 100%;
+      padding-top: 1em;
+      background-color: white;
+    }
+    #accept, #reject {
+      color: white;
+      width: 50%;
+      border-radius: 5px;
+      opacity: 0.8;
+      float: left;
+      padding: 1em 0;
+      margin-top: 0.5em;
+      cursor: pointer;
+    }
+    #accept {
+      background-color: green;
+    }
+    #reject {
+      background-color: red;
+    }
     #fileDrop {
       display:none;
       width: 258px;
@@ -75,6 +101,8 @@
     <video id="remoteVideo" width="258" height="194"></video>
     <video id="localVideo" width="75" height="54"></video>
   </div>
+  <div id="callAnswer">Incoming call<br><div id="accept">Accept</div><div id="reject">Reject</div></div>
+  <div id="calling">Calling…</div>
 
   <div id="fileDrop"><p>&nbsp;</p><p>Drop a file here!</p></div>
   <div id="fullTab">expand</div>

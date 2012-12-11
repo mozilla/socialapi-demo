@@ -27,9 +27,11 @@ function onContactClick(aEvent) {
 function callPerson(aPerson) {
   openChat(aPerson, function(aWin) {
     var win = gChats[aPerson].win;
+    var doc = win.document;
+    doc.getElementById("calling").style.display = "block";
     var pc = new win.mozRTCPeerConnection();
     pc.onaddstream = function(obj) {
-      var doc = win.document;
+      doc.getElementById("calling").style.display = "none";
       var type = obj.type;
       if (type == "video") {
         var video = doc.getElementById("remoteVideo");
@@ -271,43 +273,50 @@ function setupEventSource() {
     var data = JSON.parse(e.data);
     openChat(data.from, function(aWin) {
       var win = gChats[data.from].win;
-      var pc = new win.mozRTCPeerConnection();
-      pc.onaddstream = function(obj) {
-        var doc = win.document;
-        var type = obj.type;
-        if (type == "video") {
-          var video = doc.getElementById("remoteVideo");
-          video.mozSrcObject = obj.stream;
-          video.play();
-        } else if (type == "audio") {
-          var audio = doc.getElementById("remoteAudio");
-          audio.mozSrcObject = obj.stream;
-          audio.play();
-        } else {
-          alert("receiver onaddstream of unknown type, obj = " + obj.toSource());
-        }
+      var doc = win.document;
+      doc.getElementById("callAnswer").style.display = "block";
+      doc.getElementById("reject").onclick = function() {
+        win.close();
       };
-      setupDataChannel(false, pc, data.from);
-      gChats[data.from].pc = pc;
-      pc.setRemoteDescription(JSON.parse(data.request), function() {
-        getAudioVideo(win, pc, function() {
-          pc.createAnswer(function(answer) {
-            pc.setLocalDescription(answer, function() {
-              var randomPort = function() {
-                return Math.round(Math.random() * 60535) + 5000;
-              };
-              var localPort = randomPort();
-              var remotePort = randomPort();
-              while (remotePort == localPort) // Avoid being extremely unlucky...
-                remotePort = randomPort();
-              $.ajax({type: 'POST', url: '/answer',
-                      data: {to: data.from, request: JSON.stringify(answer),
-                             callerPort: remotePort, calleePort: localPort}});
-              pc.connectDataConnection(localPort, remotePort);
-            }, function(err) {alert("failed to setLocalDescription, " + err);});
-          }, function(err) {alert("failed to createAnswer, " + err);});
-        }, true);
-      }, function(err) {alert("failed to setRemoteDescription, " + err);});
+      doc.getElementById("accept").onclick = function() {
+        doc.getElementById("callAnswer").style.display = "none";
+        var pc = new win.mozRTCPeerConnection();
+        pc.onaddstream = function(obj) {
+          var type = obj.type;
+          if (type == "video") {
+            var video = doc.getElementById("remoteVideo");
+            video.mozSrcObject = obj.stream;
+            video.play();
+          } else if (type == "audio") {
+            var audio = doc.getElementById("remoteAudio");
+            audio.mozSrcObject = obj.stream;
+            audio.play();
+          } else {
+            alert("receiver onaddstream of unknown type, obj = " + obj.toSource());
+          }
+        };
+        setupDataChannel(false, pc, data.from);
+        gChats[data.from].pc = pc;
+        pc.setRemoteDescription(JSON.parse(data.request), function() {
+          getAudioVideo(win, pc, function() {
+            pc.createAnswer(function(answer) {
+              pc.setLocalDescription(answer, function() {
+                var randomPort = function() {
+                  return Math.round(Math.random() * 60535) + 5000;
+                };
+                var localPort = randomPort();
+                var remotePort = randomPort();
+                while (remotePort == localPort) // Avoid being extremely unlucky...
+                  remotePort = randomPort();
+                $.ajax({type: 'POST', url: '/answer',
+                        data: {to: data.from, request: JSON.stringify(answer),
+                               callerPort: remotePort, calleePort: localPort}});
+                pc.connectDataConnection(localPort, remotePort);
+              }, function(err) {alert("failed to setLocalDescription, " + err);});
+            }, function(err) {alert("failed to createAnswer, " + err);});
+          }, true);
+        }, function(err) {alert("failed to setRemoteDescription, " + err);});
+      }
     });
   }, false);
 
@@ -334,7 +343,8 @@ function setupEventSource() {
       // The chat to close doesn't exist any more...
       return;
     }
-    chat.pc.close();
+    if (chat.pc)
+      chat.pc.close();
     if (chat.dc)
       chat.dc.close();
     delete gChats[data.from];
@@ -402,7 +412,8 @@ function openChat(aTarget, aCallback) {
         return;
       stopCall(aTarget);
       var chat = gChats[aTarget];
-      chat.pc.close();
+      if (chat.pc)
+        chat.pc.close();
       if (chat.dc)
         chat.dc.close();
       delete gChats[aTarget];

@@ -6,7 +6,6 @@
   <link href="mobile.css" rel="stylesheet" type="text/css">
 
   <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
-  <script src="./js/jquery-ui-1.9.1.custom.js"></script>
   <script src="./media.js" type="text/javascript"></script>
   <script src="./mobile.js" type="text/javascript"></script>
   <script src="./personaHandler.js" type="text/javascript"></script>
@@ -25,10 +24,18 @@
   <div id="signin">
     <img src="https://developer.mozilla.org/files/3967/plain_sign_in_black.png" onclick="signin()"/>
     <div id="signin_error"></div>
- </div>
+  </div>
   <div id="signout" style="display:none"><button onclick="signout()">signout</button></div>
 </div>
-<div id="contacts">
+<div id="callAnswer">
+<hr>
+  Incoming call from: <span id="callerName"></span><br>
+  <button id="accept">Accept</button><button id="reject">Reject</button>
+</div>
+<div id="calling"><hr>
+  Calling: <span id="calleeName"></span>
+</div>
+<div id="contacts"><hr>
 Users:
 <ul id="contactslist"></ul>
 </div>
