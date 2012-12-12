@@ -30,8 +30,10 @@ else
 // and "userleft".
 
 app.get("/events", function(req, res) {
-  debugLog("/events connection opened");
-  if (!req.session.user) {
+  var user = req.session.user;
+
+  if (!user) {
+    debugLog("/events connection rejected (unauthorized)");
     res.send(401, "Unauthorized, events access denied");
     return;
   }
@@ -45,35 +47,34 @@ app.get("/events", function(req, res) {
   // Ping every 1 second.
   var pinger = setInterval(function() {
     if (res)
-      channelWrite(res, "ping", "ping");
+      channelWrite(res, "ping", "ping", true);
   }, 1000);
+
+  var key = req.connection.remoteAddress + ":" + req.connection.remotePort;
+  debugLog("Adding " + user + ", connected from " + key);
 
   // Auto logout on disconnect.
   req.on("close", function() {
     clearInterval(pinger);
-    delete users[(req.connection.remoteAddress + " " + req.connection.remotePort)];
+    delete users[key];
     logout(req);
   });
 
-  // First notify this user of all users current.
+  // First copy the list of existing users.
   var keys = Object.keys(users);
-  debugLog("number of known users: " + keys.length);
+
+  // Add the current user to the list of online users.
+  users[key] = {id: user, response: res};
+
   for (var i = 0; i < keys.length; i++) {
-    var user = users[keys[i]].id;
-    if (user != req.session.user) {
-      debugLog("about to send userjoined event, data: " + user);
-      channelWrite(res, "userjoined", user);
+    var userName = users[keys[i]].id;
+    if (userName != req.session.user) {
+      channelWrite(res, "userjoined", userName);
+      channelWrite(users[keys[i]].response, "userjoined", user);
     }
   }
 
-  // Add to current list of online users.
-  // XXX This doesn't handle multiple logins of the same user from different clients.
-  var user = req.session.user;
-  var key = req.connection.remoteAddress + " " + req.connection.remotePort;
-  notifyAllAbout(user, "userjoined");
-  users[key] = {id: user, response: res};
-  debugLog("added " + user + " to users, with key " + key + " # known now: " +
-           Object.keys(users).length);
+  debugLog("There are now now " + Object.keys(users).length + " online users");
 });
 
 // XXX Need to handle multiple log-in sessions correctly
@@ -107,7 +108,7 @@ app.post("/call", function(req, res) {
 
 app.post("/login", function(req, res) {
   if (req.session.user) {
-    debugLog("User session already created!");
+    debugLog("User session for " + req.session.user + " already created!");
     res.send(200, req.session.user);
     return;
   }
@@ -130,7 +131,7 @@ app.post("/login", function(req, res) {
 
   function finishLogin(user) {
     req.session.regenerate(function() {
-      debugLog("Creating user session");
+      debugLog("Creating user session for " + user);
       req.session.user = user;
       res.send(200, user);
     });
@@ -159,7 +160,10 @@ function logout(req, res) {
 
       // XXX Do we need this if events does it for us.
       //    delete users[user];
-      notifyAllAbout(user, "userleft");
+      var keys = Object.keys(users);
+      for (var i = 0; i < keys.length; ++i)
+        channelWrite(users[keys[i]].response, "userleft", user);
+
       if (res) {
         res.send(200);
       }
@@ -212,16 +216,19 @@ function processRequest(req, res, type) {
   res.send(200);
 }
 
-function channelWrite(aChannel, aEventType, aData) {
-  aChannel.write("event: " + aEventType + "\ndata: " + aData + "\n\n");
-}
-
-function notifyAllAbout(user, type) {
-  var keys = Object.keys(users);
-  for (var i = 0; i < keys.length; i++) {
-    debugLog("about to channel write in notifyAllAbout; event type: " + type + ", data: " + user);
-    channelWrite(users[keys[i]].response, type, user);
+function channelWrite(aChannel, aEventType, aData, aSilent) {
+  if (debugLogging && !aSilent) {
+    var to = "";
+    for (var u in users) {
+      if (users[u].response === aChannel) {
+        to = users[u].id;
+        break;
+      }
+    }
+    debugLog("to: " + to + ", type = " + aEventType + ", data = " + aData);
   }
+
+  aChannel.write("event: " + aEventType + "\ndata: " + aData + "\n\n");
 }
 
 function verifyAssertion(ast, aud, cb) {
