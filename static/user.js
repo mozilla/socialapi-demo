@@ -42,7 +42,7 @@ function onLoad() {
 }
 
 function setupEventSource() {
-  var source = new EventSource("events");
+  var source = new EventSource("events?source=user");
   source.onerror = function(e) {
     reload();
   };

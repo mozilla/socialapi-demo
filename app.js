@@ -64,7 +64,8 @@ app.get("/events", function(req, res) {
   var keys = Object.keys(users);
 
   // Add the current user to the list of online users.
-  users[key] = {id: user, response: res};
+  users[key] = {id: user, response: res, sessionID: req.sessionID,
+                source: req.query["source"]};
 
   for (var i = 0; i < keys.length; i++) {
     var userName = users[keys[i]].id;
@@ -77,17 +78,10 @@ app.get("/events", function(req, res) {
   debugLog("There are now now " + Object.keys(users).length + " online users");
 });
 
-// XXX Need to handle multiple log-in sessions correctly
-// XXX Need to handle no-call sessions
-function findResponseChannelForUser(aUser) {
-  var keys = Object.keys(users);
-  var channel;
-  for (var i = 0; i < keys.length; i++) {
-    if (users[keys[i]].id == aUser) {
-      return users[keys[i]].response;
-    }
-  }
-  return "";
+function findConnectionsForUser(aUser) {
+  return Object.keys(users)
+               .map(function(k) { return users[k]; })
+               .filter(function(u) { return u.id == aUser});
 }
 
 app.post("/call", function(req, res) {
@@ -96,13 +90,20 @@ app.post("/call", function(req, res) {
     return;
   }
 
-  var channel = findResponseChannelForUser(req.session.user);
-  if (!channel) {
+  var connections = findConnectionsForUser(req.session.user);
+  if (!connections.length) {
     res.send(400, "User not logged in for making calls");
     return;
   }
 
-  channelWrite(channel, "call", JSON.stringify(req.body));
+  for (var i = 0; i < connections.length; ++i) {
+    if (connections[i].sessionID == req.sessionID &&
+        connections[i].source == "sidebar") {
+      channelWrite(connections[i].response, "call", JSON.stringify(req.body));
+      break;
+    }
+  }
+
   res.send(200);
 });
 
@@ -151,40 +152,103 @@ function logout(req, res) {
   }
 
   var user = req.session.user;
-  // Only destroy the session if this is the last channel for the user
-  // XXX This will fail if the user logs in via two different clients. We need to store
-  // the session id or information in the user data as well. Or key by user, session and port.
-  if (!findResponseChannelForUser(user)) {
-    req.session.destroy(function() {
-      debugLog("Logging out " + user);
-
-      // XXX Do we need this if events does it for us.
-      //    delete users[user];
-      var keys = Object.keys(users);
-      for (var i = 0; i < keys.length; ++i)
-        channelWrite(users[keys[i]].response, "userleft", user);
-
-      if (res) {
-        res.send(200);
-      }
-    });
-  } else if (res) {
-    res.send(200);
+  // Only send the userleft events if this is the last channel for the user.
+  if (!findConnectionsForUser(user).length) {
+    var keys = Object.keys(users);
+    for (var i = 0; i < keys.length; ++i)
+      channelWrite(users[keys[i]].response, "userleft", user);
   }
+
+  req.session.destroy(function() {
+    debugLog("Logging out " + user);
+    if (res)
+      res.send(200);
+  });
 }
 
 app.post("/logout", logout);
 
 app.post("/offer", function(req, res) {
-  processRequest(req, res, "offer");
+  if (!checkRequest(req, res, "offer"))
+    return;
+
+  // Send the offer to all connections of the contact.
+  var to = req.body.to;
+  var connections = findConnectionsForUser(to);
+  if (!connections.length) {
+    res.send(400, to + " isn't connected (failed /offer)");
+    return;
+  }
+  req.body.from = req.session.user;
+  var data = JSON.stringify(req.body);
+  connections.forEach(function(c) { channelWrite(c.response, "offer", data); });
+
+  // Remember which connection of the user has initiated the call.
+  var userConnections = findConnectionsForUser(req.session.user);
+  for (var i = 0; i < userConnections.length; ++i) {
+    if (userConnections[i].sessionID == req.sessionID) {
+      userConnections[i].calling = to;
+      break;
+    }
+  }
+  res.send(200);
 });
 
 app.post("/answer", function(req, res) {
-  processRequest(req, res, "answer");
+  if (!checkRequest(req, res, "answer"))
+    return;
+
+  // Send the answer to the caller.
+  var connections = findConnectionsForUser(req.body.to);
+  for (var i = 0; i < connections.length; ++i) {
+    if (connections[i].calling != req.session.user)
+      continue;
+    req.body.from = req.session.user;
+    channelWrite(connections[i].response, "answer", JSON.stringify(req.body));
+    delete connections[i].calling;
+    break;
+  }
+
+  // Send a stopcall to all the other user connections that received the offer.
+  findConnectionsForUser(req.session.user).forEach(function(c) {
+    if (c.sessionID != req.sessionID)
+      channelWrite(c.response, "stopcall", JSON.stringify({from: req.body.to}));
+  });
+
+  res.send(200);
 });
 
 app.post("/stopcall", function(req, res) {
-  processRequest(req, res, "stopcall");
+  if (!checkRequest(req, res, "stopcall"))
+    return;
+
+  req.body.from = req.session.user;
+  // Check first if there are connections with pending calls. If there
+  // are, send the stopcall message only to these connections (this
+  // avoids cancelling an ongoing call if the same user tried to call
+  // from another connection point).
+  // Otherwise, send the stopcall to all connections, to cancel the active call.
+  // We shouldn't send a stopcall to connections that weren't part of
+  // the call, but the UI will just ignore them if there's no ongoing
+  // call from that person...
+  var connections = findConnectionsForUser(req.body.to);
+  var callingConnections =
+    connections.filter(function(c) { return "calling" in c; });
+  if (callingConnections.length)
+    connections = callingConnections;
+
+  connections.forEach(function(c) {
+    channelWrite(c.response, "stopcall", JSON.stringify(req.body));
+    delete c.calling;
+  });
+
+  // Send a stopcall to all the other user connections that received the offer.
+  findConnectionsForUser(req.session.user).forEach(function(c) {
+    if (c.sessionID != req.sessionID)
+      channelWrite(c.response, "stopcall", JSON.stringify({from: req.body.to}));
+  });
+
+  res.send(200);
 });
 
 app.listen(port, function() {
@@ -193,27 +257,24 @@ app.listen(port, function() {
 
 // Helper functions.
 
-function processRequest(req, res, type) {
+function checkRequest(req, res, type) {
   if (!req.session.user) {
     debugLog("Unathorized request for " + type);
     res.send(401, "Unauthorized, " + type + " access denied");
-    return;
+    return false;
   }
 
   if (!req.body.to || (!req.body.request && type != "stopcall")) {
     res.send(400, "Invalid " + type + " request");
-    return;
+    return false;
   }
 
-  var channel = findResponseChannelForUser(req.body.to);
-  if (!channel) {
+  if (!findConnectionsForUser(req.body.to).length) {
     res.send(400, "Invalid user for " + type);
-    return;
+    return false;
   }
 
-  req.body.from = req.session.user;
-  channelWrite(channel, type, JSON.stringify(req.body));
-  res.send(200);
+  return true;
 }
 
 function channelWrite(aChannel, aEventType, aData, aSilent) {

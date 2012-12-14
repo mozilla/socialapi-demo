@@ -115,7 +115,7 @@ function setupDataChannel(originator, pc, target) {
 }
 
 function setupEventSource() {
-  var source = new EventSource("events");
+  var source = new EventSource("events?source=mobile");
   source.onerror = function(e) {
     reload();
   };
