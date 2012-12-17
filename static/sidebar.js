@@ -292,6 +292,11 @@ function setupEventSource() {
     openChat(from, function(aWin) {
       var win = gChats[from].win;
       var doc = win.document;
+      var offer = JSON.parse(data.request);
+      offer.sdp = offer.sdp.split("m=").filter(function(s) {
+        return !s.startsWith("video") || s.indexOf("a=recvonly") == -1;
+      }).join("m=");
+      var audioOnly = offer.sdp.indexOf("m=video") == -1;
       doc.getElementById("callAnswer").style.display = "block";
       doc.getElementById("reject").onclick = function() {
         win.close();
@@ -315,8 +320,8 @@ function setupEventSource() {
         };
         setupDataChannel(false, pc, from);
         gChats[from].pc = pc;
-        pc.setRemoteDescription(JSON.parse(data.request), function() {
-          getAudioVideo(win, pc, function() {
+        pc.setRemoteDescription(offer, function() {
+          (audioOnly ? getAudioOnly : getAudioVideo)(win, pc, function() {
             pc.createAnswer(function(answer) {
               pc.setLocalDescription(answer, function() {
                 var randomPort = function() {

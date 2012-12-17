@@ -1,3 +1,15 @@
+function getAudioOnly(aWin, aPC, aSuccessCallback, aCanFake) {
+  try {
+    getAudio(aWin, function(stream) {
+      var audio = aWin.document.getElementById("localAudio");
+      audio.mozSrcObject = stream;
+      audio.play();
+      aPC.addStream(stream);
+      aSuccessCallback();
+    }, function(err) { alert("failed to get microphone: " + err); }, true);
+  } catch(e) { alert(e); }
+}
+
 function getAudioVideo(aWin, aPC, aSuccessCallback, aCanFake) {
   try {
     getVideo(aWin, function(stream) {
@@ -5,13 +17,7 @@ function getAudioVideo(aWin, aPC, aSuccessCallback, aCanFake) {
       video.mozSrcObject = stream;
       video.play();
       aPC.addStream(stream);
-      getAudio(aWin, function(stream) {
-        var audio = aWin.document.getElementById("localAudio");
-        audio.mozSrcObject = stream;
-        audio.play();
-        aPC.addStream(stream);
-        aSuccessCallback();
-      }, function(err) { alert("failed to get microphone: " + err); }, true);
+      getAudioOnly(aWin, aPC, aSuccessCallback, aCanFake);
     }, function(err) { alert("failed to get camera: " + err); }, true);
   } catch(e) { alert(e); }
 }

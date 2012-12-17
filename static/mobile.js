@@ -47,6 +47,7 @@ function callPerson(aPerson) {
     return;
 
   gChat = {who: aPerson};
+  gChat.audioOnly = !document.getElementById("shareCamera").checked;
 
   $("#calling").show();
   document.getElementById("calleeName").textContent = aPerson;
@@ -72,8 +73,13 @@ function callPerson(aPerson) {
   };
   setupDataChannel(true, pc, aPerson);
   gChat.pc = pc;
-  getAudioVideo(window, pc, function() {
+  (gChat.audioOnly ? getAudioOnly : getAudioVideo)(window, pc, function() {
     pc.createOffer(function(offer) {
+      if (gChat.audioOnly) {
+        offer.sdp = offer.sdp.split("m=")
+                         .filter(function(s) { return !s.startsWith("video"); })
+                         .join("m=");
+      }
       pc.setLocalDescription(offer, function() {
         $.ajax({type: 'POST', url: '/offer',
                 data: {to: aPerson, request: JSON.stringify(offer)}});},
@@ -224,7 +230,9 @@ function endCall() {
   document.getElementById("accept").onclick = null;
   document.getElementById("reject").onclick = null;
 
-  const mediaElements = ["remoteVideo", "localVideo", "remoteAudio", "localAudio"];
+  var mediaElements = ["remoteAudio", "localAudio"];
+  if (!gChat.audioOnly)
+    mediaElements = mediaElements.concat("remoteVideo", "localVideo");
   mediaElements.forEach(function (aElemId) {
     var element = document.getElementById(aElemId);
     element.pause();
