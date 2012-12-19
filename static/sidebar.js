@@ -92,6 +92,9 @@ function signedIn(aEmail) {
     profileURL: baselocation + "/user.html"
   };
   document.cookie="userdata="+JSON.stringify(userdata);
+  window.addEventListener("unload", function() {
+    document.cookie = 'userdata=; expires=Fri, 27 Jul 2001 02:47:11 UTC; path=/';
+  });
 
   gUsername = aEmail;
   gContacts[aEmail] = $("<li>"); // Avoid displaying the user in the contact list.
@@ -210,7 +213,7 @@ function setupFileSharing(win, dc, target) {
 
 function setupExpandHandler(win) {
   win.document.getElementById("fullTab").onclick = function() {
-    var tab = window.open(win.location);
+    var tab = win.open(win.location);
     tab.addEventListener("DOMContentLoaded", function() {
       tab.document.title = win.document.title;
 
@@ -419,7 +422,6 @@ navigator.mozSocial.getWorker().port.onmessage = function onmessage(e) {
 };
 
 function reload() {
-  document.cookie = 'userdata=; expires=Fri, 27 Jul 2001 02:47:11 UTC; path=/';
   navigator.mozSocial.getWorker()
            .port.postMessage({topic: "worker.reload", data: true});
   window.location.reload();

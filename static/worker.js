@@ -38,7 +38,7 @@ onconnect = function(e) {
           log("removed receiver " + index);
           _broadcastReceivers.splice(index, 1);
         }
-        log("bwmworker port closed - now " + _broadcastReceivers.length + " connections.");
+        //log("bwmworker port closed - now " + _broadcastReceivers.length + " connections.");
         return;
       }
 
@@ -76,7 +76,7 @@ var handlers = {
     apiPort.postMessage({topic: 'social.reload-worker'});
   },
   'social.initialize': function(port, data) {
-    log("social.initialize called, capturing apiPort");
+    //log("social.initialize called, capturing apiPort");
     apiPort = port;
   },
   'broadcast.listen': function(port, data) {
@@ -101,7 +101,7 @@ var handlers = {
       }
     }
     if (!newUserData) {
-      // Logging out is handled by worker.reload above.
+      userData = {};
       return;
     }
     if (userData.userName != newUserData.userName) {

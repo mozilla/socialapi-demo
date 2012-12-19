@@ -5,7 +5,7 @@ function watchPersonaLogins(aLoginFunc, aLogoutFunc) {
     navigator.id.watch({
       loggedInUser: null,
       onlogin: function(assertion) {
-	if (aLoginFunc)
+        if (aLoginFunc)
           aLoginFunc(assertion);
       },
       onlogout: function() {
