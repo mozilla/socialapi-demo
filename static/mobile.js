@@ -75,11 +75,6 @@ function callPerson(aPerson) {
   gChat.pc = pc;
   (gChat.audioOnly ? getAudioOnly : getAudioVideo)(window, pc, function() {
     pc.createOffer(function(offer) {
-      if (gChat.audioOnly) {
-        offer.sdp = offer.sdp.split("m=")
-                         .filter(function(s) { return !s.startsWith("video"); })
-                         .join("m=");
-      }
       pc.setLocalDescription(offer, function() {
         $.ajax({type: 'POST', url: '/offer',
                 data: {to: aPerson, request: JSON.stringify(offer)}});},
