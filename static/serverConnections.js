@@ -1,4 +1,7 @@
+var remoteLoginPending = false;
+
 function remoteLogin(options) {
+  remoteLoginPending = true;
   $.ajax({
     type: 'POST',
     url: '/login',

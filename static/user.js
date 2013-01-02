@@ -16,8 +16,6 @@ function signedOut() {
   gUserEmail = "";
   $("#useridbox").text("");
   $("#useridbox").hide();
-  $("#nouserid").show();
-  $("#signin").show();
   $("#signout").hide();
   window.location.reload();
 }
@@ -27,6 +25,7 @@ function onContactClick(aEvent) {
 }
 
 function onPersonaLogin(assertion) {
+  $("#signin").hide();
   // XXX this generates a second log in at the server, but we need it for remote connections.
   remoteLogin({assertion: assertion});
 }
@@ -37,14 +36,20 @@ function onPersonaLogout() {
   remoteLogout();
 }
 
+function onPersonaReady() {
+  if (gUserEmail || remoteLoginPending)
+    return;
+  $("#signin").show();
+}
+
 function onLoad() {
-  watchPersonaLogins(onPersonaLogin, onPersonaLogout);
+  watchPersonaLogins(onPersonaLogin, onPersonaLogout, onPersonaReady);
 }
 
 function setupEventSource() {
   var source = new EventSource("events?source=user");
   source.onerror = function(e) {
-    reload();
+    window.location.reload();
   };
 
   source.addEventListener("ping", function(e) {}, false);
@@ -67,4 +72,9 @@ function setupEventSource() {
     gContacts[e.data].remove();
     delete gContacts[e.data];
   }, false);
+
+  window.addEventListener("beforeunload", function() {
+    source.onerror = null;
+    source.close();
+  }, true);
 }

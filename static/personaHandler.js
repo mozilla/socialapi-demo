@@ -1,6 +1,6 @@
 // Functions to make handling Persona login/logout easier and simpler.
 
-function watchPersonaLogins(aLoginFunc, aLogoutFunc) {
+function watchPersonaLogins(aLoginFunc, aLogoutFunc, aReadyFunc) {
   if (navigator.id) {
     navigator.id.watch({
       loggedInUser: null,
@@ -11,6 +11,10 @@ function watchPersonaLogins(aLoginFunc, aLogoutFunc) {
       onlogout: function() {
         if (aLogoutFunc)
           aLogoutFunc();
+      },
+      onready: function() {
+        if (aReadyFunc)
+          aReadyFunc();
       }
     });
   }

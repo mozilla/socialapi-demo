@@ -18,24 +18,27 @@ function signedOut() {
   $("#useridbox").text("");
   $("#useridbox").hide();
   $("#nouserid").show();
-  $("#signin").show();
   $("#signout").hide();
   window.location.reload();
 }
 
 function onPersonaLogin(assertion) {
-  // XXX this generates a second log in at the server, but we need it for remote connections.
+  $("#signin").hide();
   remoteLogin({assertion: assertion});
 }
 
 function onPersonaLogout() {
-  // XXX Assume the sidebar handles the remote part of this.
-  // We'll need to keep an eye out for changes if we close the sidebar.
   remoteLogout();
 }
 
+function onPersonaReady() {
+  if (gUsername || remoteLoginPending)
+    return;
+  $("#signin").show();
+}
+
 function onLoad() {
-  watchPersonaLogins(onPersonaLogin, onPersonaLogout);
+  watchPersonaLogins(onPersonaLogin, onPersonaLogout, onPersonaReady);
 }
 
 function onContactClick(aEvent) {
@@ -118,7 +121,7 @@ function setupDataChannel(originator, pc, target) {
 function setupEventSource() {
   var source = new EventSource("events?source=mobile");
   source.onerror = function(e) {
-    reload();
+    window.location.reload();
   };
 
   source.addEventListener("ping", function(e) {}, false);
@@ -209,6 +212,11 @@ function setupEventSource() {
 
     endCall();
   }, false);
+
+  window.addEventListener("beforeunload", function() {
+    source.onerror = null;
+    source.close();
+  }, true);
 }
 
 function closeCall() {

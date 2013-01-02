@@ -18,7 +18,7 @@
 <body onload="onLoad()">
 
 <div id="header">
-  <div id="signin">
+  <div id="signin" style="display: none">
     <img src="https://developer.mozilla.org/files/3967/plain_sign_in_black.png" onclick="signin()"/>
     <div id="signin_error"></div>
   </div>
@@ -29,13 +29,13 @@
   <div id="usernotifbox" style="display:none">
     <img id="usernotif">
   </div>
-  <div id="guest">
+  <div id="guest" style="display: none">
     <a href="javascript:startGuest();">Guest Mode</a>
   </div>
 </div>
 
 <div id="content" style="display:none">
-<button style="position: absolute; right: 3px;" id="signout" onclick="signout()">signout</button>
+<button style="position: absolute; right: 3px;" id="signout" onclick="onSignout()">signout</button>
 <ul id="contacts" style="margin-top: 20px;"></ul>
 </div>
 

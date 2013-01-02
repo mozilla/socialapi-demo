@@ -1,8 +1,11 @@
 var gContacts = {};
 var gChats = {};
 var gUsername = "";
+var gFake = false;
 
 function onPersonaLogin(assertion) {
+  $("#guest").hide();
+  $("#signin").hide();
   remoteLogin({assertion: assertion});
 }
 
@@ -11,13 +14,20 @@ function onPersonaLogout(assertion) {
     remoteLogout();
 }
 
+function onPersonaReady() {
+  if (gUsername || remoteLoginPending)
+    return;
+  $("#guest").show();
+  $("#signin").show();
+}
+
 function onLoad() {
   var worker = navigator.mozSocial.getWorker();
   if (!worker) {
     document.body.style.border = "3px solid red";
   }
 
-  watchPersonaLogins(onPersonaLogin, onPersonaLogout);
+  watchPersonaLogins(onPersonaLogin, onPersonaLogout, onPersonaReady);
 }
 
 function onContactClick(aEvent) {
@@ -73,11 +83,13 @@ function startGuest() {
     '<input type="text" id="user"/>' +
     '<input type="button" value="Login" onclick="javascript:guestLogin();"/>'
   );
+  $("#user").focus();
 }
 
 function guestLogin() {
   var user = $("#user").attr("value");
   remoteLogin({assertion: user, fake: true});
+  gFake = true;
 }
 
 function signedIn(aEmail) {
@@ -98,6 +110,15 @@ function signedIn(aEmail) {
 
   gUsername = aEmail;
   gContacts[aEmail] = $("<li>"); // Avoid displaying the user in the contact list.
+}
+
+function onSignout() {
+  if (!gFake)
+    signout();
+  else {
+    gFake = false;
+    onPersonaLogout();
+  }
 }
 
 function signedOut() {
@@ -376,6 +397,11 @@ function setupEventSource() {
     delete gChats[data.from];
     chat.win.close();
   });
+
+  window.addEventListener("beforeunload", function() {
+    source.onerror = null;
+    source.close();
+  }, true);
 }
 
 function userIsConnected(userdata) {
@@ -383,13 +409,11 @@ function userIsConnected(userdata) {
   $("#usericon").attr("src", userdata.portrait);
   $("#useridbox").show();
   $("#usericonbox").show();
-  $("#signin").hide();
   $("#content").show();
   setupEventSource();
 }
 
 function userIsDisconnected() {
-  $("#signin").show();
   $("#content").hide();
   $("#userid").text("");
   $("#usericon").attr("src", "");
