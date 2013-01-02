@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<RDF:RDF xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+  <RDF:Description about="urn:mozilla:extension:webrtc-demo@mozillalabs.com">
+    <em:updates>
+      <RDF:Seq>
+        <RDF:li resource="urn:mozilla:extension:webrtc-demo@mozillalabs.com:0.7"/>
+      </RDF:Seq>
+    </em:updates>
+  </RDF:Description>
+  <RDF:Description about="urn:mozilla:extension:webrtc-demo@mozillalabs.com:0.7">
+    <em:version>0.7</em:version>
+    <em:targetApplication>
+      <RDF:Description>
+        <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
+        <em:minVersion>20.0a1</em:minVersion>
+        <em:maxVersion>20.0a1</em:maxVersion>
+        <em:updateLink>https://webrtc-demo.vcap.mozillalabs.com/webrtc.xpi</em:updateLink>
+        <em:updateInfoURL>https://webrtc-demo.vcap.mozillalabs.com/update.txt</em:updateInfoURL>
+        <em:updateHash>sha256:8f35297401b4fac5a9791c90e21a3a2734be8ebd7d7ff538cf91ec4d5828d0de</em:updateHash>
+      </RDF:Description>
+    </em:targetApplication>
+  </RDF:Description>
+</RDF:RDF>
