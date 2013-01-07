@@ -25,7 +25,10 @@
     <img src="https://developer.mozilla.org/files/3967/plain_sign_in_black.png" onclick="signin()"/>
     <div id="signin_error"></div>
   </div>
-  <div id="signout" style="display:none"><button onclick="signout()">signout</button></div>
+  <div id="guest" style="display:none">
+    <a href="javascript:startGuest();">Guest Mode</a>
+  </div>
+  <div id="signout" style="display:none"><button onclick="onSignout()">signout</button></div>
 </div>
 <div id="callAnswer">
 <hr>

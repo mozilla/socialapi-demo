@@ -1,6 +1,22 @@
 var gUsername;
 var gContacts = {};
 var gChat;
+var gFake = false;
+
+function startGuest() {
+  $("#signin").hide();
+  $("#guest").html(
+    '<input type="text" id="user"/>' +
+    '<input type="button" value="Login" onclick="javascript:guestLogin();"/>'
+  );
+  $("#user").focus();
+}
+
+function guestLogin() {
+  var user = $("#user").attr("value");
+  remoteLogin({assertion: user, fake: true});
+  gFake = true;
+}
 
 function signedIn(aEmail) {
   gUsername = aEmail;
@@ -8,6 +24,7 @@ function signedIn(aEmail) {
   $("#useridbox").show();
   $("#nouserid").hide();
   $("#signin").hide();
+  $("#guest").hide();
   $("#signout").show();
   gContacts[aEmail] = $("<li>"); // Avoid displaying the user in the contact list.
   setupEventSource();
@@ -22,8 +39,18 @@ function signedOut() {
   window.location.reload();
 }
 
+function onSignout() {
+  if (!gFake)
+    signout();
+  else {
+    gFake = false;
+    onPersonaLogout();
+  }
+}
+
 function onPersonaLogin(assertion) {
   $("#signin").hide();
+  $("#guest").hide();
   remoteLogin({assertion: assertion});
 }
 
@@ -35,6 +62,7 @@ function onPersonaReady() {
   if (gUsername || remoteLoginPending)
     return;
   $("#signin").show();
+  $("#guest").show();
 }
 
 function onLoad() {
