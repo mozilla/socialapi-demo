@@ -77,8 +77,8 @@ function callPerson(aPerson) {
   if (gChat)
     return;
 
-  gChat = {who: aPerson};
-  gChat.audioOnly = !document.getElementById("shareCamera").checked;
+  gChat = {who: aPerson,
+           audioOnly: !document.getElementById("shareCamera").checked};
 
   $("#calling").show();
   document.getElementById("calleeName").textContent = aPerson;
@@ -87,64 +87,10 @@ function callPerson(aPerson) {
   $("#header").hide();
   $("#contacts").hide();
 
-  var pc = new window.mozRTCPeerConnection();
-  pc.onaddstream = function(obj) {
-    var type = obj.type;
-    if (type == "video") {
-      var video = document.getElementById("remoteVideo");
-      video.mozSrcObject = obj.stream;
-      video.play();
-    } else if (type == "audio") {
-      var audio = document.getElementById("remoteAudio");
-      audio.mozSrcObject = obj.stream;
-      audio.play();
-    } else {
-      alert("sender onaddstream of unknown type, obj = " + obj.toSource());
-    }
-  };
-  setupDataChannel(true, pc, aPerson);
-  gChat.pc = pc;
-  (gChat.audioOnly ? getAudioOnly : getAudioVideo)(window, pc, function() {
-    pc.createOffer(function(offer) {
-      pc.setLocalDescription(offer, function() {
-        $.ajax({type: 'POST', url: '/offer',
-                data: {to: aPerson, request: JSON.stringify(offer)}});},
-        function(err) { alert("setLocalDescription failed: " + err); });
-    }, function(err) { alert("createOffer failed: " + err); });
-  });
+  gChat.pc = webrtcMedia.startCall(aPerson, window, gChat.audioOnly);
 }
 
 var filename = "default.txt";
-function setupDataChannel(originator, pc, target) {
-//  var win = gChats[target].win;
-
-  pc.ondatachannel = function(channel) {
-//    setupFileSharing(win, channel, target);
-  };
-
-  pc.onconnection = function() {
-/*    if (originator) {
-      // open a channel to the other side.
-      setupFileSharing(win, pc.createDataChannel("SocialAPI", {}), target);
-    }
-
-    // sending chat.
-    win.document.getElementById("chatForm").onsubmit = function() {
-      var localChat = win.document.getElementById("localChat");
-      var message = localChat.value;
-      gChats[target].dc.send(message);
-      localChat.value = "";
-      // XXX: Sometimes insertChatMessage throws an exception, don't know why yet.
-      try {
-        insertChatMessage(win, "Me", message);
-      } catch(e) {}
-      return false;
-    };*/
-  };
-
-  pc.onclosedconnection = function() {
-  };
-}
 
 function setupEventSource() {
   var source = new EventSource("events?source=mobile");
@@ -179,7 +125,8 @@ function setupEventSource() {
       return;
 
     var data = JSON.parse(e.data);
-    gChat = {who: data.from};
+    var audioOnly = JSON.parse(data.request).sdp.indexOf("m=video") == -1;
+    gChat = {who: data.from, audioOnly: audioOnly};
 
     $("#callAnswer").show();
     document.getElementById("callerName").textContent = data.from;
@@ -190,34 +137,7 @@ function setupEventSource() {
       $("#header").hide();
       $("#contacts").hide();
 
-      var pc = new window.mozRTCPeerConnection();
-      pc.onaddstream = function(obj) {
-        var type = obj.type;
-        if (type == "video") {
-          var video = document.getElementById("remoteVideo");
-          video.mozSrcObject = obj.stream;
-          video.play();
-        } else if (type == "audio") {
-          var audio = document.getElementById("remoteAudio");
-          audio.mozSrcObject = obj.stream;
-          audio.play();
-        } else {
-          alert("receiver onaddstream of unknown type, obj = " + obj.toSource());
-        }
-      };
-      setupDataChannel(false, pc, data.from);
-      gChat.pc = pc;
-      pc.setRemoteDescription(JSON.parse(data.request), function() {
-        getAudioVideo(window, pc, function() {
-          pc.createAnswer(function(answer) {
-            pc.setLocalDescription(answer, function() {
-              $.ajax({type: 'POST', url: '/answer',
-                      data: {to: data.from, request: JSON.stringify(answer)}});
-              pc.connectDataConnection(5001,5000);
-            }, function(err) {alert("failed to setLocalDescription, " + err);});
-          }, function(err) {alert("failed to createAnswer, " + err);});
-        }, true);
-      }, function(err) {alert("failed to setRemoteDescription, " + err);});
+      gChat.pc = webrtcMedia.handleOffer(data, window, audioOnly);
     };
   }, false);
 
@@ -225,10 +145,11 @@ function setupEventSource() {
     var data = JSON.parse(e.data);
     var pc = gChat.pc;
     pc.setRemoteDescription(JSON.parse(data.request), function() {
+      // XXX Data connections don't currently work on mobile
       // Nothing to do for the audio/video. The interesting things for
       // them will happen in onaddstream.
       // We need to establish the data connection though.
-      pc.connectDataConnection(5000,5001);
+      // pc.connectDataConnection(5000,5001);
     }, function(err) {alert("failed to setRemoteDescription with answer, " + err);});
   }, false);
 
@@ -261,24 +182,7 @@ function endCall() {
   document.getElementById("accept").onclick = null;
   document.getElementById("reject").onclick = null;
 
-  var mediaElements = ["remoteAudio", "localAudio"];
-  if (!gChat.audioOnly)
-    mediaElements = mediaElements.concat("remoteVideo", "localVideo");
-  mediaElements.forEach(function (aElemId) {
-    var element = document.getElementById(aElemId);
-    element.pause();
-    if (aElemId.indexOf("local") != -1) {
-      if (gChat.pc)
-        gChat.pc.removeStream(element.mozSrcObject);
-      if (element.mozSrcObject)
-        element.mozSrcObject.stop();
-    }
-    element.mozSrcObject = null;
-  });
-
-  if (gChat.pc)
-    gChat.pc.close();
-  // XXX Don't need to close data connection just yet.
+  webrtcMedia.endCall(gChat.pc, null, window, gChat.audioOnly);
   gChat = null;
 
   $("#call").hide();
