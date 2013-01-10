@@ -3,22 +3,22 @@
 <head>
 <title>Demo WebRTC Social Service</title>
 <link rel="manifest" type="text/json" href="manifest.json">
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+<script src="https://login.persona.org/include.js"></script>
+<script src="./checks.js" type="text/javascript"></script>
 <script>
 function activate() {
   document.dispatchEvent(new CustomEvent("ActivateSocialFeature"));
 }
 </script>
 </head>
-<body>
+<body onload="webrtcChecks.checkSupport(true);">
 <h1>Demo WebRTC / Social Service</h1>
 
-<p>To run this demo, please first install and latest <a href="https://nightly.mozilla.org/">Nightly</a> version of Mozilla Firefox.</p>
+<div id="supportwarning"></div>
 
-<p>Then install <a href="webrtc.xpi">this add-on</a>. You may need to restart for the social api update to take full effect.</p>
+<p>A page to test for mobile devices may be <a href="mobile.html">found here</a></p>
 
-<!--
-<button onclick="activate()">Activate The Demo WebRTC Provider</button>
--->
 <p>The code and manual configuration details may be found at <a href="https://github.com/mozilla/socialapi-demo">https://github.com/mozilla/socialapi-demo</a></p>
 
 </body>
