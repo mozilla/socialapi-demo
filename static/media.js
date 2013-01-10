@@ -127,23 +127,26 @@ var webrtcMedia = {
 
   _setupAudioVideo: function webrtcMedia_setupAudioVideo(aWin, aPC, aSuccessCallback, aCanFake) {
     try {
-      webrtcMedia._getVideoMedia(aWin, function(stream) {
+      webrtcMedia._getAudioVideoMedia(aWin, function(stream) {
         var video = aWin.document.getElementById("localVideo");
         video.mozSrcObject = stream;
         video.play();
+        var audio = aWin.document.getElementById("localAudio");
+        audio.mozSrcObject = stream;
+        audio.play();
         aPC.addStream(stream);
-        webrtcMedia._setupAudioOnly(aWin, aPC, aSuccessCallback, aCanFake);
+        aSuccessCallback();
       }, function(err) { alert("failed to get camera: " + err); }, true);
     } catch(e) { alert(e); }
   },
 
-  _getVideoMedia: function webrtcMedia_getVideoMedia(aWin, aSuccessCallback, aErrorCallback,
+  _getAudioVideoMedia: function webrtcMedia_getVideoMedia(aWin, aSuccessCallback, aErrorCallback,
                                                      aCanFake) {
-    aWin.navigator.mozGetUserMedia({video: true}, function(stream) {
+    aWin.navigator.mozGetUserMedia({video: true, audio: true}, function(stream) {
       aSuccessCallback(stream);
     }, function(err) {
       if (aCanFake && err == "HARDWARE_UNAVAILABLE") {
-        aWin.navigator.mozGetUserMedia({video: true, fake: true}, aSuccessCallback, aErrorCallback);
+        aWin.navigator.mozGetUserMedia({video: true, audio: true, fake: true}, aSuccessCallback, aErrorCallback);
       } else {
         aErrorCallback(err);
       }
