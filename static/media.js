@@ -27,6 +27,14 @@ var webrtcMedia = {
       (aAudioOnly ? webrtcMedia._setupAudioOnly :
                     webrtcMedia._setupAudioVideo)(aWin, pc, function() {
         pc.createAnswer(function(answer) {
+          if (aAudioOnly) {
+            // If the user doesn't want video, remove the receive-only
+            // video part of the SDP answer so that the other party
+            // knows it shouldn't send it.
+            answer.sdp = answer.sdp.split("m=")
+                               .filter(function(s) { return !s.startsWith("video"); })
+                               .join("m=");
+          }
           pc.setLocalDescription(answer, function() {
             if (aAudioOnly) {
               $.ajax({type: 'POST', url: '/answer',

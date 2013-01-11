@@ -137,6 +137,8 @@ function setupEventSource() {
       $("#header").hide();
       $("#contacts").hide();
 
+      if (!document.getElementById("shareCamera").checked)
+        gChat.audioOnly = audioOnly = true;
       gChat.pc = webrtcMedia.handleOffer(data, window, audioOnly);
     };
   }, false);

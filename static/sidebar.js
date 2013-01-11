@@ -302,9 +302,20 @@ function setupEventSource() {
 
   source.addEventListener("answer", function(e) {
     var data = JSON.parse(e.data);
-    var pc = gChats[data.from].pc;
-    gChats[data.from].win.document.getElementById("calling").style.display = "none";
-    pc.setRemoteDescription(JSON.parse(data.request), function() {
+    var chat = gChats[data.from];
+    var answer = JSON.parse(data.request);
+    var pc = chat.pc;
+    if (!chat.audioOnly && answer.sdp.indexOf("m=video") == -1) {
+      chat.audioOnly = true;
+      var video = chat.win.document.getElementById("localVideo");
+      pc.removeStream(video.mozSrcObject);
+      video.pause();
+      if (video.mozSrcObject)
+        video.mozSrcObject.stop();
+      video.mozSrcObject = null;
+    }
+    chat.win.document.getElementById("calling").style.display = "none";
+    pc.setRemoteDescription(answer, function() {
       // Nothing to do for the audio/video. The interesting things for
       // them will happen in onaddstream.
       // We need to establish the data connection though.
