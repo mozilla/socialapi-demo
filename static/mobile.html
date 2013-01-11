@@ -10,12 +10,14 @@
   <script src="./mobile.js" type="text/javascript"></script>
   <script src="./personaHandler.js" type="text/javascript"></script>
   <script src="./serverConnections.js" type="text/javascript"></script>
+  <script src="./checks.js" type="text/javascript"></script>
   <script src="https://login.persona.org/include.js"></script>
 
   <title>Mobile WebRTC</title>
 </head>
 
-<body onload="onLoad()">
+<body onload="webrtcChecks.checkSupport(false);onLoad();">
+<div id="supportwarning"></div>
 <div id="header">
   <img id="userimg" src="./user.png"/>
   <div id="nouserid">Welcome!</div>

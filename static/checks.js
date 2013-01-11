@@ -17,9 +17,8 @@ var webrtcChecks = {
   },
 
   displayWarning: function webrtc_displayWarning() {
-    $("#supportwarning").append('<p>To run this demo, please first install and latest <a href="https://nightly.mozilla.org/">Nightly</a> version of Mozilla Firefox.</p>' +
+    $("#supportwarning").append('<p><img src="defaultWarningIcon.png"/> To run this demo, please first install and latest <a href="https://nightly.mozilla.org/">Nightly</a> version of Mozilla Firefox.</p>' +
       '<p>Then install <a href="webrtc.xpi">this add-on</a>. You may need to restart for the social api update to take full effect.</p>');
-
   },
 
   displaySuccess: function webrtc_displaySuccess() {
