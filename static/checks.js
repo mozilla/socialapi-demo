@@ -1,19 +1,31 @@
 var webrtcChecks = {
   checkSupport: function webrtc_checkSupport(aDisplaySuccess) {
-    if (!navigator.mozGetUserMedia || !navigator.id) {
-      this.displayWarning();
-      return;
-    }
+    var support = this.hasWebRTC() && this.hasBrowserId();
 
+    if (!support)
+      this.displayWarning();
+    else if (aDisplaySuccess)
+      this.displaySuccess();
+  },
+
+  hasWebRTC: function webrtc_hasWebRTC() {
+    if (!navigator.mozGetUserMedia)
+      return false;
     try {
       var dummy = new window.mozRTCPeerConnection()
     } catch (x) {
-      this.displayWarning();
-      return;
+      return false;
     }
+    return true;
+  },
 
-    if (aDisplaySuccess)
-      this.displaySuccess();
+  hasBrowserId: function webrtc_hasBrowserId() {
+    return !!navigator.id;
+  },
+
+  checkSidebarSupport: function webrtc_checkSidebarSupport() {
+    if (!this.hasWebRTC() || !this.hasBrowserId())
+      this.displaySidebarWarning();
   },
 
   displayWarning: function webrtc_displayWarning() {
@@ -29,5 +41,9 @@ var webrtcChecks = {
       '</ul>' +
       '<p>If you get issues, please try running the latest <a href="https://nightly.mozilla.org/">nightly of Firefox</p>');
 
+  },
+
+  displaySidebarWarning: function webrtc_displaySidebarWarning() {
+    $("#supportwarning").append("<p>Your browser is not set up correctly or is not the right version, please <a href='/' target='_blank'>visit the homepage</a> for instructions on how to set it up.</p>");
   }
 }
