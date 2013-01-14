@@ -3,7 +3,7 @@
   <Description about="urn:mozilla:install-manifest">
     <em:id>webrtc-demo@mozillalabs.com</em:id>
     <em:name>WebRTC Demo Improvements</em:name>
-    <em:version>0.7</em:version>
+    <em:version>0.8</em:version>
     <em:description>Adds default variables for webrtc and some extra features</em:description>
     <em:bootstrap>true</em:bootstrap>
     <em:updateURL>https://webrtc-demo.vcap.mozillalabs.com/update.rdf</em:updateURL>
@@ -12,7 +12,7 @@
       <Description>
         <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
         <em:minVersion>20.0a1</em:minVersion>
-        <em:maxVersion>20.0a1</em:maxVersion>
+        <em:maxVersion>21.0a1</em:maxVersion>
       </Description>
     </em:targetApplication>
   </Description>

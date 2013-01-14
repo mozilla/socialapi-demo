@@ -19,6 +19,44 @@ const BOOTSTRAP_REASONS = {
 };
 
 let webrtcbrowser = {
+  get isCurrentProvider() {
+    var currentProvider = "";
+    try {
+      currentProvider = Services.prefs.getCharPref("social.provider.current");
+    } catch (x) {
+    }
+
+    return currentProvider == kSiteURL;
+  },
+
+  setStyle: function webrtcbrowser_setStyle() {
+    if (!this.isCurrentProvider) {
+      return;
+    }
+
+    let sss = Components.classes["@mozilla.org/content/style-sheet-service;1"]
+                        .getService(Components.interfaces.nsIStyleSheetService);
+    let uri = Services.io.newURI(__SCRIPT_URI_SPEC__ + "/../styles/browser.css", null, null);
+    try {
+      if (!sss.sheetRegistered(uri, sss.USER_SHEET))
+        sss.loadAndRegisterSheet(uri, sss.USER_SHEET);
+    } catch (x) {
+      Components.utils.reportError(x);
+    }
+  },
+
+  unloadStyle: function webrtcbrowser_unloadStyle() {
+    let sss = Components.classes["@mozilla.org/content/style-sheet-service;1"]
+                        .getService(Components.interfaces.nsIStyleSheetService);
+    let uri = Services.io.newURI(__SCRIPT_URI_SPEC__ + "/../styles/browser.css", null, null);
+    try {
+      if (sss.sheetRegistered(uri, sss.USER_SHEET))
+        sss.unregisterSheet(uri, sss.USER_SHEET);
+    } catch (x) {
+      Components.utils.reportError(x);
+    }
+  },
+
   setWidths: function webrtcbrowser_setWidths() {
     try {
       var windows = Services.ww.getWindowEnumerator();
@@ -28,23 +66,12 @@ let webrtcbrowser = {
           window.document.getElementById("social-sidebar-browser").setAttribute("style", "min-width: 14em; width: 235px; max-width: 36em;");
         }
       }
-      Components.utils.reportError("setup");
     } catch (x) {
       Components.utils.reportError(x);
     }
   },
 
   addMeTabButton: function webrtcbrowser_addMeTabButton() {
-    var currentProvider = "";
-    try {
-      currentProvider = Services.prefs.getCharPref("social.provider.current");
-    } catch (x) {
-    }
-
-    // Don't do anything if we're not the current provider
-    if (currentProvider != kSiteURL)
-      return;
-
     try {
       var windows = Services.ww.getWindowEnumerator();
       while (windows.hasMoreElements()) {
@@ -92,32 +119,35 @@ let webrtcbrowser = {
   },
 
   init: function webrtcbrowser_init() {
-    try {
-      Services.obs.addObserver(this, "social:profile-changed", false);
-    } catch (x) {
-      Components.utils.reportError(x);
-    }
+    Services.obs.addObserver(this, "social:profile-changed", false);
+    this.setWidths();
+    this.setStyle();
   },
 
   uninit: function webrtcbrowser_uninit() {
+    this.unloadStyle();
     Services.obs.removeObserver(this, "social:profile-changed");
   },
 
   observe: function webrtcbrowser_observe(subject, topic, data) {
     switch (topic) {
       case "social:profile-changed":
-        this.addMeTabButton();
+        if (this.isCurrentProvider) {
+          this.addMeTabButton();
+          this.setStyle();
+        }
+        else {
+          this.unloadStyle();
+        }
         break;
       case "browser-delayed-startup-finished":
         this.init();
-        this.setWidths();
         break;
     }
   }
 };
 
 function startup(data, reason) {
-  Components.utils.reportError("startup " + reason);
   switch (reason) {
     case BOOTSTRAP_REASONS.APP_STARTUP:
       Services.obs.addObserver(webrtcbrowser, "browser-delayed-startup-finished", false);
@@ -128,14 +158,13 @@ function startup(data, reason) {
     case BOOTSTRAP_REASONS.ADDON_DOWNGRADE:
     default:
       webrtcbrowser.init();
-      webrtcbrowser.setWidths();
       break;
   }
 }
 
 function shutdown(data, reason) {
   webrtcbrowser.uninit();
-
+/*
   switch(reason) {
     case BOOTSTRAP_REASONS.APP_SHUTDOWN:
     case BOOTSTRAP_REASONS.ADDON_DISABLE:
@@ -145,6 +174,7 @@ function shutdown(data, reason) {
     default:
       break;
   }
+*/
 }
 
 function install(data, reason) {
@@ -170,6 +200,8 @@ function install(data, reason) {
       Services.prefs.setBoolPref("media.peerconnection.enabled", true);
       Services.prefs.setBoolPref("dom.disable_open_during_load", false);
       Services.prefs.setBoolPref("social.enabled", true);
+
+      webrtcbrowser.init();
       break;
     }
     default:
@@ -195,4 +227,5 @@ function uninstall(data, reason) {
   } catch (x) {
     activeProviders = {};
   }
+  webrtcbrowser.uninit();
 }

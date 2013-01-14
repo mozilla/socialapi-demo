@@ -1,0 +1,12 @@
+@-moz-document url-prefix("chrome://browser/content/browser.xul") {
+  chatbox {
+    /* 285px high and 260px wide are FF defaults. The '.chatbar-innerbox'
+       'margin-top' needs to be bigger that your height. */
+    height: 285px !important;
+    width: 260px !important;
+  }
+  .chatbar-innerbox {
+    /* Ensure this is bigger or the same as chatbox.height */
+    margin-top: -285px !important;
+  }
+}
