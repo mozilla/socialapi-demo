@@ -10,9 +10,16 @@ var webrtcMedia = {
       function() {
         pc.createOffer(function(offer) {
           pc.setLocalDescription(offer, function() {
-            $.ajax({type: 'POST', url: '/offer',
-            data: {to: aPerson, request: JSON.stringify(offer)}});},
-            function(err) { alert("setLocalDescription failed: " + err);
+            $.ajax({
+              type: 'POST',
+              url: '/offer',
+              contentType: 'application/json',
+              data: JSON.stringify({
+                to: aPerson,
+                request: JSON.stringify(offer)
+              })
+            });
+          }, function(err) { alert("setLocalDescription failed: " + err);
           });
         }, function(err) { alert("createOffer failed: " + err); });
       });
@@ -37,8 +44,15 @@ var webrtcMedia = {
           }
           pc.setLocalDescription(answer, function() {
             if (aAudioOnly) {
-              $.ajax({type: 'POST', url: '/answer',
-                      data: {to: aData.from, request: JSON.stringify(answer)}});
+              $.ajax({
+                type: 'POST',
+                url: '/answer',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                  to: aData.from,
+                  request: JSON.stringify(answer)
+                })
+              });
             }
             else {
               var randomPort = function() {
@@ -48,9 +62,17 @@ var webrtcMedia = {
               var remotePort = randomPort();
               while (remotePort == localPort) // Avoid being extremely unlucky...
                 remotePort = randomPort();
-              $.ajax({type: 'POST', url: '/answer',
-                      data: {to: aData.from, request: JSON.stringify(answer),
-                             callerPort: remotePort, calleePort: localPort}});
+              $.ajax({
+                type: 'POST',
+                url: '/answer',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                  to: aData.from,
+                  request: JSON.stringify(answer),
+                  callerPort: remotePort,
+                  calleePort: localPort
+                })
+              });
               pc.connectDataConnection(localPort, remotePort);
             }
           }, function(err) {alert("failed to setLocalDescription, " + err);});
