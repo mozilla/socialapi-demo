@@ -161,7 +161,8 @@ function setupEventSource() {
       // XXX alert or log?
       return;
 
-    endCall();
+    if (gChat.who === data.from)
+      endCall();
   }, false);
 
   window.addEventListener("beforeunload", function() {
