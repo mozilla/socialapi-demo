@@ -198,46 +198,63 @@ function setupFileSharing(win, dc, target) {
   }
 }
 
+function finishDetachTab(aWindow) {
+  var doc = aWindow.document;
+  var localVideo = doc.getElementById("localVideo");
+  var video = doc.getElementById("remoteVideo");
+  video.setAttribute("style", "position: fixed; top: 0; left: 0; z-index: 1; background: black;");
+
+  var resizeVideo = function() {
+    var height = aWindow.innerHeight;
+    var width = aWindow.innerWidth;
+
+    video.setAttribute("width", width);
+    video.setAttribute("height", height);
+
+    localVideo.setAttribute("width", "108");
+    localVideo.setAttribute("height", "81");
+    localVideo.setAttribute("style", "position: fixed; z-index: 2;");
+    localVideo.style.top = (height - 81) + "px";
+    localVideo.style.left = (width - 108) + "px";
+  };
+  resizeVideo();
+  aWindow.addEventListener("resize", resizeVideo);
+
+  var button = doc.getElementById("fullTab");
+  button.onclick = function() {
+    doc.getElementById("video").mozRequestFullScreen();
+  };
+  button.textContent = "Full screen";
+}
+
 function setupExpandHandler(win) {
   win.document.getElementById("fullTab").onclick = function() {
-    var tab = win.open(win.location);
-    tab.addEventListener("DOMContentLoaded", function() {
-      tab.document.title = win.document.title;
+    var doc = win.document;
+    var event = doc.createEvent("UIEvents");
+    event.initUIEvent("detachToTab", true, true, win, 0);
+    win.dispatchEvent(event);
 
-      var video = win.document.getElementById("remoteVideo");
-      var newVideo = tab.document.getElementById("remoteVideo");
-      newVideo.mozSrcObject = video.mozSrcObject;
-      newVideo.play();
-      newVideo.setAttribute("style", "position: fixed; top: 0; left: 0; z-index: 1; background: black;");
+    if (!event.defaultPrevented) {
+      // The add-on isn't installed, fallback to opening a new tab and
+      // keeping the floating window around.
+      var tab = win.open(win.location);
+      tab.addEventListener("DOMContentLoaded", function() {
+        tab.document.title = win.document.title;
 
-      var localVideo = win.document.getElementById("localVideo");
-      var newLocalVideo = tab.document.getElementById("localVideo");
-      newLocalVideo.mozSrcObject = localVideo.mozSrcObject;
-      newLocalVideo.play();
+        var video = doc.getElementById("remoteVideo");
+        var newVideo = tab.document.getElementById("remoteVideo");
+        newVideo.mozSrcObject = video.mozSrcObject;
+        newVideo.play();
 
-      var resizeVideo = function() {
-        var height = tab.innerHeight;
-        var width = tab.innerWidth;
-        var doc = tab.document;
-
-        newVideo.setAttribute("width", width);
-        newVideo.setAttribute("height", height);
-
-        newLocalVideo.setAttribute("width", "108");
-        newLocalVideo.setAttribute("height", "81");
-        newLocalVideo.setAttribute("style", "position: fixed; z-index: 2;");
-        newLocalVideo.style.top = (height - 81) + "px";
-        newLocalVideo.style.left = (width - 108) + "px";
-      };
-      resizeVideo();
-      tab.addEventListener("resize", resizeVideo);
-
-      var button = tab.document.getElementById("fullTab");
-      button.onclick = function() {
-        tab.document.getElementById("video").mozRequestFullScreen();
-      };
-      button.textContent = "Full screen";
-    });
+        var localVideo = doc.getElementById("localVideo");
+        var newLocalVideo = tab.document.getElementById("localVideo");
+        newLocalVideo.mozSrcObject = localVideo.mozSrcObject;
+        newLocalVideo.play();
+        finishDetachTab(tab);
+      });
+    }
+    else
+      finishDetachTab(doc.defaultView);
   };
 }
 

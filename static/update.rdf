@@ -10,7 +10,7 @@
     </em:updates>
   </RDF:Description>
   <RDF:Description about="urn:mozilla:extension:webrtc-demo@mozillalabs.com:0.7">
-    <em:version>0.8</em:version>
+    <em:version>0.9</em:version>
     <em:targetApplication>
       <RDF:Description>
         <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
@@ -18,7 +18,7 @@
         <em:maxVersion>21.0a1</em:maxVersion>
         <em:updateLink>https://webrtc-demo.vcap.mozillalabs.com/webrtc.xpi</em:updateLink>
         <em:updateInfoURL>https://webrtc-demo.vcap.mozillalabs.com/update.txt</em:updateInfoURL>
-        <em:updateHash>sha256:012683881177e3d640228e1cd48064db9a6a0853a89507255307854599810d83</em:updateHash>
+        <em:updateHash>sha256:97dabc30764643790b1c523f5a3cb0594433b1b5f4503d2e566ba20235f0ee02</em:updateHash>
       </RDF:Description>
     </em:targetApplication>
   </RDF:Description>

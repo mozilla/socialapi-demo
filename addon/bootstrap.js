@@ -57,6 +57,49 @@ let webrtcbrowser = {
     }
   },
 
+  _detachToTabListener: function webrtcbrowser__detachToTabListener(aEvent) {
+    let currentBrowser = this.selectedChat.iframe;
+    let gBrowser = this.ownerDocument.getElementById("content");
+
+    // browser.swapDocShells expects a browser, not an iframe, so simulate
+    // the missing methods.
+    currentBrowser.getTabBrowser = function() { return null; };
+    currentBrowser.detachFormFill = function() {};
+    currentBrowser.attachFormFill = function() {};
+
+    let tab = gBrowser.loadOneTab("about:blank", null, null, null, false);
+    gBrowser.swapNewTabWithBrowser(tab, currentBrowser);
+    this.selectedChat.close();
+    aEvent.preventDefault(); // This lets the emitter of the event know it's been handled.
+    gBrowser.setTabTitle(tab);
+  },
+
+  listenToDetachToTabEvents: function webrtcbrowser_listenToDetachToTabEvents() {
+    var windows = Services.ww.getWindowEnumerator();
+    while (windows.hasMoreElements()) {
+      var window = windows.getNext().QueryInterface(Components.interfaces.nsIDOMWindow);
+      if (window.location.href == "chrome://browser/content/browser.xul") {
+        window.document.getElementById("pinnedchats")
+              .addEventListener("detachToTab",
+                                webrtcbrowser._detachToTabListener,
+                                false, true);
+      }
+    }
+  },
+
+  unlistenToDetachToTabEvents: function webrtcbrowser_unlistenToDetachToTabEvents() {
+    var windows = Services.ww.getWindowEnumerator();
+    while (windows.hasMoreElements()) {
+      var window = windows.getNext().QueryInterface(Components.interfaces.nsIDOMWindow);
+      if (window.location.href == "chrome://browser/content/browser.xul") {
+        window.document.getElementById("pinnedchats")
+              .removeEventListener("detachToTab",
+                                   webrtcbrowser._detachToTabListener,
+                                   false, true);
+      }
+    }
+  },
+
   setWidths: function webrtcbrowser_setWidths() {
     try {
       var windows = Services.ww.getWindowEnumerator();
@@ -122,10 +165,12 @@ let webrtcbrowser = {
     Services.obs.addObserver(this, "social:profile-changed", false);
     this.setWidths();
     this.setStyle();
+    this.listenToDetachToTabEvents();
   },
 
   uninit: function webrtcbrowser_uninit() {
     this.unloadStyle();
+    this.unlistenToDetachToTabEvents();
     Services.obs.removeObserver(this, "social:profile-changed");
   },
 
