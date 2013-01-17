@@ -1,8 +1,10 @@
 Components.utils.import("resource://gre/modules/Services.jsm");
 
 const kSiteURL = "https://webrtc-demo.vcap.mozillalabs.com";
+const kActivationURL = "https://webrtc-demo.vcap.mozillalabs.com";
 const kSiteName = "WebRTC Social Demo";
 const kSidebarPage = "/sidebar.htm";
+const kManifestLocation = "/manifest.json";
 const kSiteImageLocation = "/icon.png";
 const kPrefName = "social.manifest.webrtc-demo";
 const kUserImageLocation = "/icon.png";
@@ -228,8 +230,8 @@ function install(data, reason) {
     case BOOTSTRAP_REASONS.ADDON_UPGRADE:
     case BOOTSTRAP_REASONS.ADDON_DOWNGRADE:
     {
-      Services.prefs.setCharPref(kPrefName, '{"location":"' + kSiteURL + '/manifest.json","name":"' + kSiteName + '","iconURL":"' + kSiteURL + kSiteImageLocation + '","workerURL":"' + kSiteURL + '/worker.js","sidebarURL":"' + kSiteURL + kSidebarPage + '","origin":"' + kSiteURL + '","enabled":true,"last_modified":135101330568}');
-      Services.prefs.setCharPref("social.provider.current", kSiteURL);
+      Services.prefs.setCharPref(kPrefName, '{"location":"' + kSiteURL + kManifestLocation + '","name":"' + kSiteName + '","iconURL":"' + kSiteURL + kSiteImageLocation + '","workerURL":"' + kSiteURL + '/worker.js","sidebarURL":"' + kSiteURL + kSidebarPage + '","origin":"' + kActivationURL + '","enabled":true,"last_modified":135101330568}');
+      Services.prefs.setCharPref("social.provider.current", kActivationURL);
       var activeProviders;
       try {
         activeProviders = JSON.parse(Services.prefs.getCharPref("social.activeProviders"));
@@ -237,7 +239,7 @@ function install(data, reason) {
         activeProviders = {};
       }
 
-      activeProviders[kSiteURL] = 1;
+      activeProviders[kActivationURL] = 1;
       Services.prefs.setCharPref("social.activeProviders", JSON.stringify(activeProviders));
 
       Services.prefs.setBoolPref("media.navigator.enabled", true);
