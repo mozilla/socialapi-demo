@@ -324,11 +324,11 @@ function setupEventSource() {
     var pc = chat.pc;
     if (!chat.audioOnly && answer.sdp.indexOf("m=video") == -1) {
       chat.audioOnly = true;
+      var audio = chat.win.document.getElementById("localAudio");
       var video = chat.win.document.getElementById("localVideo");
-      pc.removeStream(video.mozSrcObject);
-      video.pause();
-      if (video.mozSrcObject)
-        video.mozSrcObject.stop();
+      // Using the audio+video stream as audio only has the
+      // unfortunate effect of keeping the webcam active...
+      audio.mozSrcObject = video.mozSrcObject;
       video.mozSrcObject = null;
     }
     chat.win.document.getElementById("calling").style.display = "none";

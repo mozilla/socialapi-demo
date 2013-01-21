@@ -84,9 +84,11 @@ var webrtcMedia = {
   },
 
   endCall: function webrtcMedia_stopCall(aPc, aDc, aWin, aAudioOnly) {
-    var mediaElements = ["remoteAudio", "localAudio"];
+    var mediaElements = ["remoteAudio"];
     if (!aAudioOnly)
       mediaElements = mediaElements.concat("remoteVideo", "localVideo");
+    else
+      mediaElements.push("localAudio");
 
     // Stop each media element
     mediaElements.forEach(function (aElemId) {
@@ -161,9 +163,6 @@ var webrtcMedia = {
         var video = aWin.document.getElementById("localVideo");
         video.mozSrcObject = stream;
         video.play();
-        var audio = aWin.document.getElementById("localAudio");
-        audio.mozSrcObject = stream;
-        audio.play();
         aPC.addStream(stream);
         aSuccessCallback();
       }, function(err) { alert("failed to get camera: " + err); }, true);
