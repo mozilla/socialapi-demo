@@ -47,8 +47,8 @@ app.get("/events", function(req, res) {
   // Ping every 1 second.
   var pinger = setInterval(function() {
     if (res)
-      channelWrite(res, "ping", "ping", true);
-  }, 1000);
+      res.write(":ping\n\n");
+  }, 20000);
 
   var key = req.connection.remoteAddress + ":" + req.connection.remotePort;
   debugLog("Adding " + user + ", connected from " + key);
@@ -277,8 +277,8 @@ function checkRequest(req, res, type) {
   return true;
 }
 
-function channelWrite(aChannel, aEventType, aData, aSilent) {
-  if (debugLogging && !aSilent) {
+function channelWrite(aChannel, aEventType, aData) {
+  if (debugLogging) {
     var to = "";
     for (var u in users) {
       if (users[u].response === aChannel) {

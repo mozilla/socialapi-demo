@@ -17,6 +17,7 @@ function remoteLogout() {
     type: 'POST',
     url: '/logout',
     contentType: 'application/json',
+    data: '{}',
     success: function(res, status, xhr) { signedOut(); },
     error: function(xhr, status, err) { signOutFailure(xhr, status, err); }
   });
