@@ -31,10 +31,11 @@ function onLoad() {
 }
 
 function onContactClick(aEvent) {
-  callPerson(aEvent.target.innerHTML);
+  callPerson(aEvent.target.getAttribute("user"),
+             aEvent.target.getAttribute("call") == "audio");
 }
 
-function callPerson(aPerson) {
+function callPerson(aPerson, aAudioCall) {
   // Check first if the person is already calling us...
   if (aPerson in gChats) {
     // If a call is ringing, accept it.
@@ -48,9 +49,9 @@ function callPerson(aPerson) {
     var win = gChats[aPerson].win;
     var doc = win.document;
     doc.getElementById("calling").style.display = "block";
-    gChats[aPerson].pc = webrtcMedia.startCall(aPerson, win, false,
+    gChats[aPerson].pc = webrtcMedia.startCall(aPerson, win, aAudioCall,
                                                onConnection, setupFileSharing);
-    gChats[aPerson].audioOnly = false;
+    gChats[aPerson].audioOnly = aAudioCall;
   });
 }
 
@@ -270,11 +271,20 @@ function setupEventSource() {
     if (e.data in gContacts) {
       return;
     }
-    var button = $('<button class="userButton">' + e.data + '</button>');
-    var c = $("<li>");
-    $("#contacts").append(c.append(button));
-    button.click(onContactClick);
-    gContacts[e.data] = c;
+    var contact = $('<li class="contact">');
+    // Add the picture
+    contact.append($('<img class="userPhoto" src="contact-generic.png"/>'));
+    contact.append($('<div class="userName">' + e.data + '</div>'));
+    var userButtons = $('<div class="userButtons">');
+    var userButton = $('<button class="userButtonVideo" user="' + e.data + '" call="video"/>');
+    userButton.click(onContactClick);
+    userButtons.append(userButton);
+    userButton = $('<button class="userButtonAudio" user="' + e.data + '" call="audio"/>');
+    userButton.click(onContactClick);
+    userButtons.append(userButton);
+    contact.append(userButtons);
+    $("#contacts").append(contact);
+    gContacts[e.data] = contact;
   }, false);
 
   source.addEventListener("userleft", function(e) {
