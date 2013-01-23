@@ -88,7 +88,11 @@ BODY {
   width: 45px;
   height: 45px;
 }
-.userNames {
+.userName {
+  background: url("contact-generic.png") 2px / 45px no-repeat;
+  min-height: 45px;
+  padding: 2px 2px 2px 49px;
+  margin-bottom: -26px;
 }
 .userButtons {
   margin-left: auto;

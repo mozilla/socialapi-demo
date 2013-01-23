@@ -273,7 +273,6 @@ function setupEventSource() {
     }
     var contact = $('<li class="contact">');
     // Add the picture
-    contact.append($('<img class="userPhoto" src="contact-generic.png"/>'));
     contact.append($('<div class="userName">' + e.data + '</div>'));
     var userButtons = $('<div class="userButtons">');
     var userButton = $('<button class="userButtonVideo" user="' + e.data + '" call="video"/>');
