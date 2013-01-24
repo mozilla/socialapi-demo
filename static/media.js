@@ -5,6 +5,12 @@ var webrtcMedia = {
                                             aDataConnectionCallback) {
     var pc = this._createBasicPc(aWin, aPerson, true, aAudioOnly, aConnectionCallback,
                                  aDataConnectionCallback);
+
+    // XXX Disable the data channel if it is an audio-only call to accomodate android for now.
+    var constraints;
+    if (aAudioOnly)
+      constraints = { 'mandatory': { "MozDontOfferDataChannel": true }};
+
     (aAudioOnly ? this._setupAudioOnly : this._setupAudioVideo)(aWin,
       pc,
       function() {
@@ -21,7 +27,7 @@ var webrtcMedia = {
             });
           }, function(err) { alert("setLocalDescription failed: " + err);
           });
-        }, function(err) { alert("createOffer failed: " + err); });
+        }, function(err) { alert("createOffer failed: " + err); }, constraints);
       });
     return pc;
   },
@@ -30,6 +36,12 @@ var webrtcMedia = {
                                                 aDataConnectionCallback) {
     var pc = this._createBasicPc(aWin, aData.from, false, aAudioOnly, aConnectionCallback,
                                  aDataConnectionCallback);
+
+    // XXX Disable the data channel if it is an audio-only call to accomodate android for now.
+    var constraints;
+    if (aAudioOnly)
+      constraints = { 'mandatory': { "MozDontOfferDataChannel": true }};
+
     pc.setRemoteDescription(JSON.parse(aData.request), function() {
       (aAudioOnly ? webrtcMedia._setupAudioOnly :
                     webrtcMedia._setupAudioVideo)(aWin, pc, function() {
@@ -76,7 +88,7 @@ var webrtcMedia = {
               pc.connectDataConnection(localPort, remotePort);
             }
           }, function(err) {alert("failed to setLocalDescription, " + err);});
-        }, function(err) {alert("failed to createAnswer, " + err);});
+        }, function(err) {alert("failed to createAnswer, " + err);}, constraints);
       }, true);
     }, function(err) {alert("failed to setRemoteDescription, " + err); });
 
@@ -112,11 +124,7 @@ var webrtcMedia = {
   _createBasicPc: function webrtcMedia_createBasicPc(aWin, aPerson, aOriginator, aAudioOnly,
                                                      aConnectionCallback,
                                                      aDataConnectionCallback) {
-    var constraints = {};
-    // XXX Temporary constraint as full data channel SDP work is unfinished.
-    if (aAudioOnly)
-      constraints["MozDontOfferDataChannel"] = true;
-    var pc = new aWin.mozRTCPeerConnection(constraints);
+    var pc = new aWin.mozRTCPeerConnection();
     pc.onaddstream = function(obj) {
       var type = obj.type;
       if (type == "video") {
