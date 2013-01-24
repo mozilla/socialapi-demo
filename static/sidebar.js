@@ -376,8 +376,7 @@ function setupEventSource() {
 function userIsConnected(userdata) {
   $("#userid").text(userdata.userName);
   $("#usericon").attr("src", userdata.portrait);
-  $("#useridbox").show();
-  $("#usericonbox").show();
+  $("#signedin").show();
   $("#content").show();
   setupEventSource();
 }
@@ -386,8 +385,7 @@ function userIsDisconnected() {
   $("#content").hide();
   $("#userid").text("");
   $("#usericon").attr("src", "");
-  $("#useridbox").hide();
-  $("#usericonbox").hide();
+  $("#signedin").hide();
 }
 
 var messageHandlers = {

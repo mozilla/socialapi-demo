@@ -23,25 +23,18 @@
     <img src="https://developer.mozilla.org/files/3967/plain_sign_in_black.png" onclick="signin()"/>
     <div id="signin_error"></div>
   </div>
-  <div id="useridbox" style="display:none">Signed in as <div id="userid"></div></div>
-  <div id="usericonbox" style="display:none">
-    <img id="usericon">
-  </div>
-  <div id="usernotifbox" style="display:none">
-    <img id="usernotif">
-  </div>
   <div id="guest" style="display: none">
     <a href="javascript:startGuest();">Guest Mode</a>
+  </div>
+  <div id="signedin" style="display:none">
+    <img id="usericon">Signed in as <div id="userid"></div>
+    <button id="signout" onclick="onSignout()">signout</button>
   </div>
 </div>
 
 <div id="supportwarning"></div>
-
 <div id="content" style="display:none">
- <div align="right" class="signout">
-    <button id="signout" onclick="onSignout()">signout</button>
- </div>
- <ul id="contacts" class="list unstyled"></ul>
+  <ul id="contacts" class="list unstyled"></ul>
 </div>
 
 
