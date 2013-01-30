@@ -44,11 +44,11 @@ function signOutFailure(xhr, status, err) {
   alert("Sign out failure: " + err);
 }
 
-function stopCall(aUser) {
+function stopCall(aUser, aReason) {
   $.ajax({
     type: 'POST',
     url: '/stopcall',
     contentType: 'application/json',
-    data: JSON.stringify({to: aUser})
+    data: JSON.stringify({to: aUser, reason: aReason})
   });
 }

@@ -121,16 +121,23 @@ function setupEventSource() {
   }, false);
 
   source.addEventListener("offer", function(e) {
-    if (gChat)
-      return;
-
     var data = JSON.parse(e.data);
+    // We already are in a call. We reject automatically the incoming
+    // one.
+    if (gChat) {
+      closeCall(data.from, "The callee is busy right now, the call has been rejected.");
+      return;
+    }
+
     var audioOnly = JSON.parse(data.request).sdp.indexOf("m=video") == -1;
     gChat = {who: data.from, audioOnly: audioOnly};
 
     $("#callAnswer").show();
     document.getElementById("callerName").textContent = data.from;
-    document.getElementById("reject").onclick = function() {closeCall();};
+    document.getElementById("reject").onclick = function() {
+      closeCall(gChat.who, "The call has been rejected");
+      endCall();
+    };
     document.getElementById("accept").onclick = function() {
       $("#callAnswer").hide();
       $("#call").show();
@@ -171,12 +178,11 @@ function setupEventSource() {
   }, true);
 }
 
-function closeCall() {
+function closeCall(aUser, aReason) {
   if (!gChat)
     return;
 
-  stopCall(gChat.who);
-  endCall();
+  stopCall(aUser, aReason);
 }
 
 function endCall() {

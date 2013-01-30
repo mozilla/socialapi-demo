@@ -2,6 +2,7 @@ var gContacts = {};
 var gChats = {};
 var gUsername = "";
 var gFake = false;
+var gInChat = false;
 
 function onPersonaLogin(assertion) {
   $("#guest").hide();
@@ -46,12 +47,11 @@ function callPerson(aPerson, aAudioCall) {
   }
 
   openChat(aPerson, function(aWin) {
-    var win = gChats[aPerson].win;
-    var doc = win.document;
-    doc.getElementById("calling").style.display = "block";
-    gChats[aPerson].pc = webrtcMedia.startCall(aPerson, win, aAudioCall,
-                                               onConnection, setupFileSharing);
-    gChats[aPerson].audioOnly = aAudioCall;
+    var chat = gChats[aPerson];
+    setStatus(chat, "Calling...");
+    chat.pc = webrtcMedia.startCall(aPerson, chat.win, aAudioCall,
+                                    onConnection, setupFileSharing);
+    chat.audioOnly = aAudioCall;
   });
 }
 
@@ -316,9 +316,11 @@ function setupEventSource() {
 
       doc.getElementById("callAnswer").style.display = "block";
       doc.getElementById("reject").onclick = function() {
+        stopCall(from, "The call has been rejected");
         win.close();
       };
       doc.getElementById("accept").onclick = function() {
+        gInChat = true;
         doc.getElementById("callAnswer").style.display = "none";
         gChats[from].pc = webrtcMedia.handleOffer(data, win, gChats[from].audioOnly,
                                                   onConnection, setupFileSharing);
@@ -340,8 +342,9 @@ function setupEventSource() {
       audio.mozSrcObject = video.mozSrcObject;
       video.mozSrcObject = null;
     }
-    chat.win.document.getElementById("calling").style.display = "none";
+    setStatus(chat, "");
     pc.setRemoteDescription(answer, function() {
+      gInChat = true;
       // Nothing to do for the audio/video. The interesting things for
       // them will happen in onaddstream.
       // We need to establish the data connection though.
@@ -363,14 +366,27 @@ function setupEventSource() {
       return;
     }
     webrtcMedia.endCall(chat.pc, chat.dc, chat.win, chat.audioOnly);
-    delete gChats[data.from];
-    chat.win.close();
+    setStatus(chat, data.reason || "The call has been closed.");
+    chat.win.document.getElementById("callAnswer").style.display = "none";
+    setTimeout(function() {
+      chat.win.close();
+      delete gChats[data.from];
+    }, 10000);
   });
 
   window.addEventListener("beforeunload", function() {
     source.onerror = null;
     source.close();
   }, true);
+}
+
+function setStatus(chat, message) {
+  var status = chat.win.document.getElementById("status");
+  if (message) {
+    status.textContent = message;
+    status.style.display = "block";
+  } else
+    status.style.display = "none";
 }
 
 function userIsConnected(userdata) {
@@ -426,10 +442,11 @@ function openChat(aTarget, aCallback) {
     win.addEventListener("unload", function() {
       if (!(aTarget in gChats))
         return;
-      stopCall(aTarget);
+      stopCall(aTarget, gInChat ? "" : "The call has been canceled.");
       var chat = gChats[aTarget];
       webrtcMedia.endCall(chat.pc, chat.dc, chat.win, chat.audioOnly);
       delete gChats[aTarget];
+      gInChat = false;
     });
     if (aCallback) {
       aCallback(win);
