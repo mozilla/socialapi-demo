@@ -134,10 +134,32 @@ function insertChatMessage(win, from, message) {
 
 var filename = "default.txt";
 
+function handleFile(win, blob) {
+  var url = win.URL.createObjectURL(blob);
+
+  // If the file extension is known, just open the file in a new tab.
+  const ext = ["jpg", "jpeg", "gif", "png", "pdf", "txt"];
+  if (ext.indexOf(filename.split(".").pop().toLowerCase()) != -1)
+    win.open(url);
+  else {
+    // Otherwise offer to save the file.
+    // We create a fake link to use its .download property that lets
+    // us set the filename that will be shown to the user in the
+    // download dialog.
+    var a = win.document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    var event = win.document.createEvent("MouseEvents");
+    event.initMouseEvent("click", true, false, win, 0, 0, 0, 0, 0,
+                         false, false, false, false, 0, null);
+    a.dispatchEvent(event); // false if event was cancelled
+  }
+}
+
 function gotChat(win, evt) {
   if (evt.data instanceof Blob) {
     // for file transfer.
-    saveAs(evt.data, filename);
+    handleFile(win, evt.data);
   } else {
     // either an incoming file or chat.
     try {
