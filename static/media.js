@@ -6,11 +6,6 @@ var webrtcMedia = {
     var pc = this._createBasicPc(aWin, aPerson, true, aAudioOnly, aConnectionCallback,
                                  aDataConnectionCallback);
 
-    // XXX Disable the data channel if it is an audio-only call to accomodate android for now.
-    var constraints;
-    if (aAudioOnly)
-      constraints = { 'mandatory': { "MozDontOfferDataChannel": true }};
-
     (aAudioOnly ? this._setupAudioOnly : this._setupAudioVideo)(aWin,
       pc,
       function() {
@@ -27,7 +22,7 @@ var webrtcMedia = {
             });
           }, function(err) { alert("setLocalDescription failed: " + err);
           });
-        }, function(err) { alert("createOffer failed: " + err); }, constraints);
+        }, function(err) { alert("createOffer failed: " + err); });
       });
     return pc;
   },
@@ -36,11 +31,6 @@ var webrtcMedia = {
                                                 aDataConnectionCallback) {
     var pc = this._createBasicPc(aWin, aData.from, false, aAudioOnly, aConnectionCallback,
                                  aDataConnectionCallback);
-
-    // XXX Disable the data channel if it is an audio-only call to accomodate android for now.
-    var constraints;
-    if (aAudioOnly)
-      constraints = { 'mandatory': { "MozDontOfferDataChannel": true }};
 
     pc.setRemoteDescription(JSON.parse(aData.request), function() {
       (aAudioOnly ? webrtcMedia._setupAudioOnly :
@@ -55,40 +45,27 @@ var webrtcMedia = {
                                .join("m=");
           }
           pc.setLocalDescription(answer, function() {
-            if (aAudioOnly) {
-              $.ajax({
-                type: 'POST',
-                url: '/answer',
-                contentType: 'application/json',
-                data: JSON.stringify({
-                  to: aData.from,
-                  request: JSON.stringify(answer)
-                })
-              });
-            }
-            else {
-              var randomPort = function() {
-                return Math.round(Math.random() * 60535) + 5000;
-              };
-              var localPort = randomPort();
-              var remotePort = randomPort();
-              while (remotePort == localPort) // Avoid being extremely unlucky...
-                remotePort = randomPort();
-              $.ajax({
-                type: 'POST',
-                url: '/answer',
-                contentType: 'application/json',
-                data: JSON.stringify({
-                  to: aData.from,
-                  request: JSON.stringify(answer),
-                  callerPort: remotePort,
-                  calleePort: localPort
-                })
-              });
-              pc.connectDataConnection(localPort, remotePort);
-            }
+            var randomPort = function() {
+              return Math.round(Math.random() * 60535) + 5000;
+            };
+            var localPort = randomPort();
+            var remotePort = randomPort();
+            while (remotePort == localPort) // Avoid being extremely unlucky...
+              remotePort = randomPort();
+            $.ajax({
+              type: 'POST',
+              url: '/answer',
+              contentType: 'application/json',
+              data: JSON.stringify({
+                to: aData.from,
+                request: JSON.stringify(answer),
+                callerPort: remotePort,
+                calleePort: localPort
+              })
+            });
+            pc.connectDataConnection(localPort, remotePort);
           }, function(err) {alert("failed to setLocalDescription, " + err);});
-        }, function(err) {alert("failed to createAnswer, " + err);}, constraints);
+        }, function(err) {alert("failed to createAnswer, " + err);});
       }, true);
     }, function(err) {alert("failed to setRemoteDescription, " + err); });
 

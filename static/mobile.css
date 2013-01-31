@@ -31,6 +31,11 @@ button {
   padding-top: 1em;
 }
 
+#chat {
+  overflow: hidden;
+  height: 53px;
+}
+
 /*
  * 946 is the max width of the center area plus its padding
  */
