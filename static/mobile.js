@@ -179,7 +179,15 @@ function onConnection(aWin, aPc, aPerson, aOriginator) {
 function setupChat(aWin, aChannel) {
   aChannel.binaryType = "blob";
   aChannel.onmessage = function(evt) {
-    insertChatMessage("Them", evt.data);
+    try {
+      var details = JSON.parse(evt.data);
+      if (details.type == "url")
+        window.open(details.url);
+      else
+        throw new Error("JSON, but not an url");
+    } catch(e) {
+      insertChatMessage("Them", evt.data);
+    }
   }
 
   document.getElementById("chatForm").onsubmit = function() {
