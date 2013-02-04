@@ -12,7 +12,7 @@ var webrtcChecks = {
     if (!navigator.mozGetUserMedia)
       return false;
     try {
-      var dummy = new window.mozRTCPeerConnection()
+      var dummy = new window.mozRTCPeerConnection({iceServers: []});
     } catch (x) {
       return false;
     }
@@ -24,8 +24,14 @@ var webrtcChecks = {
   },
 
   checkSidebarSupport: function webrtc_checkSidebarSupport() {
-    if (!this.hasWebRTC() || !this.hasBrowserId())
+    if (!this.hasWebRTC())
       this.displaySidebarWarning();
+
+    if (!this.hasBrowserId()) {
+      gHasInternetAccess = false;
+      $("#guest").show();
+      startGuest();
+    }
   },
 
   displayWarning: function webrtc_displayWarning() {
