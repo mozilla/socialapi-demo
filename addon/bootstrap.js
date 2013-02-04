@@ -69,6 +69,11 @@ let webrtcbrowser = {
     currentBrowser.attachFormFill = function() {};
 
     let tab = gBrowser.loadOneTab("about:blank", null, null, null, false);
+    if (currentBrowser.socialErrorListener) {
+      // Removing socialErrorListener fails after the docshells have been swapped.
+      currentBrowser.socialErrorListener.remove();
+      currentBrowser.socialErrorListener = {remove: function() {}};
+    }
     gBrowser.swapNewTabWithBrowser(tab, currentBrowser);
     this.selectedChat.close();
     aEvent.preventDefault(); // This lets the emitter of the event know it's been handled.
