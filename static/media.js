@@ -1,8 +1,7 @@
-var gHasInternetAccess = true;
-
 // This object currently assumes the following elements are defined in the web page for calls:
 // remoteVideo, remoteAudio, localVideo, localAudio
 var webrtcMedia = {
+  hasInternetAccess: true,
   startCall: function webrtcMedia_startCall(aPerson, aWin, aAudioOnly, aConnectionCallback,
                                             aDataConnectionCallback) {
     var pc = this._createBasicPc(aWin, aPerson, true, aAudioOnly, aConnectionCallback,
@@ -104,7 +103,7 @@ var webrtcMedia = {
                                                      aConnectionCallback,
                                                      aDataConnectionCallback) {
     var params;
-    if (!gHasInternetAccess)
+    if (!this.hasInternetAccess)
       params = {iceServers: []};
     var pc = new aWin.mozRTCPeerConnection(params);
     pc.onaddstream = function(obj) {

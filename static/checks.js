@@ -28,7 +28,7 @@ var webrtcChecks = {
       this.displaySidebarWarning();
 
     if (!this.hasBrowserId()) {
-      gHasInternetAccess = false;
+      webrtcMedia.hasInternetAccess = false;
       $("#guest").show();
       startGuest();
     }
