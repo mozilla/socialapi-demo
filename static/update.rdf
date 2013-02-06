@@ -18,7 +18,7 @@
         <em:maxVersion>21.0a1</em:maxVersion>
         <em:updateLink>https://webrtc-demo.vcap.mozillalabs.com/webrtc.xpi</em:updateLink>
         <em:updateInfoURL>https://webrtc-demo.vcap.mozillalabs.com/update.txt</em:updateInfoURL>
-        <em:updateHash>sha256:9fb2aa621f8389766289f8706fb53fb482baba129a39fe9dfa0aa22defc2709e</em:updateHash>
+        <em:updateHash>sha256:24f2459029905bfcdab14e6d3bc0562213281c0d7d5d8ce13b05f4dfe8a90168</em:updateHash>
       </RDF:Description>
     </em:targetApplication>
   </RDF:Description>

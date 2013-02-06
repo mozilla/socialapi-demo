@@ -202,10 +202,6 @@ function startup(data, reason) {
   switch (reason) {
     case BOOTSTRAP_REASONS.APP_STARTUP:
       Services.obs.addObserver(webrtcbrowser, "browser-delayed-startup-finished", false);
-      var siteURL = kSiteURL;
-      if (Services.prefs.prefHasUserValue(kWrappsSiteURLPref))
-        siteURL = Services.prefs.getCharPref(kWrappsSiteURLPref);
-      setDefaultProvider(siteURL);
       break;
     case BOOTSTRAP_REASONS.ADDON_ENABLE:
     case BOOTSTRAP_REASONS.ADDON_INSTALL:
@@ -215,10 +211,14 @@ function startup(data, reason) {
       webrtcbrowser.init();
       break;
   }
+  Services.prefs.addObserver(kWrappsSiteURLPref, prefChangeListener, false);
+
 }
 
 function shutdown(data, reason) {
   webrtcbrowser.uninit();
+  Services.prefs.removeObserver(kWrappsSiteURLPref, prefChangeListener);
+
 /*
   switch(reason) {
     case BOOTSTRAP_REASONS.APP_SHUTDOWN:
@@ -250,6 +250,10 @@ function setDefaultProvider(aSiteURL) {
   Services.prefs.setBoolPref("media.peerconnection.enabled", true);
   Services.prefs.setBoolPref("dom.disable_open_during_load", false);
   Services.prefs.setBoolPref("social.enabled", true);
+}
+
+function prefChangeListener(aSubject, aTopic, aData) {
+  setDefaultProvider(Services.prefs.getCharPref(kWrappsSiteURLPref));
 }
 
 function install(data, reason) {
