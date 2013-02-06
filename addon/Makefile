@@ -2,6 +2,7 @@ VERSION = 0.10
 
 all:
 	rm ../static/webrtc.xpi
+	sed "s/@VERSION@/$(VERSION)/" < install.rdf.in > install.rdf
 	zip ../static/webrtc.xpi bootstrap.js options.xul chrome.manifest install.rdf \
             styles/*.css
 	sed "s/@VERSION@/$(VERSION)/; \
