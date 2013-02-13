@@ -31,7 +31,7 @@
     <a href="javascript:startGuest();">Guest Mode</a>
   </div>
   <div id="signout" style="display:none"><button onclick="onSignout()">signout</button>
-  <br><br><input type="checkbox" id="shareCamera">Share my camera</input></div>
+  <br><br><label><input type="checkbox" id="shareCamera"/>Share my camera</label></div>
 </div>
 <div id="callAnswer">
 <hr>
@@ -46,11 +46,9 @@ Users:
 <ul id="contactslist"></ul>
 </div>
 <div id="call" style="display:none">
-  <div id="remoteVideoContainer">
-    <video id="remoteVideo"></video>
-  </div>
-  <div id="localVideoContainer">
-    <video id="localVideo" muted></video>
+  <div id="video">
+    <video id="remoteVideo" width="258" height="194"></video>
+    <video id="localVideo" width="75" height="54" muted></video>
   </div>
   <div id="chat"></div>
   <form id="chatForm">

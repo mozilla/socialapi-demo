@@ -73,6 +73,37 @@ function onContactClick(aEvent) {
   callPerson(aEvent.target.getAttribute("user"));
 }
 
+function resizeVideo() {
+  var localVideo = document.getElementById("localVideo");
+  var video = document.getElementById("remoteVideo");
+  video.setAttribute("style", "position: fixed; top: 0; left: 0; z-index: 1; background: black;");
+
+  var height = window.innerHeight;
+  var width = window.innerWidth;
+
+  video.setAttribute("width", width);
+  video.setAttribute("height", height);
+
+  localVideo.setAttribute("width", "108");
+  localVideo.setAttribute("height", "81");
+  localVideo.setAttribute("style", "position: fixed; z-index: 2;");
+  localVideo.style.top = (height - 81) + "px";
+  localVideo.style.left = (width - 108) + "px";
+}
+
+function fullScreenVideo() {
+  document.getElementById("closecall").setAttribute("style",
+    "position: absolute; top: 0; right: 0; margin: 0 0; z-index: 3;");
+
+  var video = document.getElementById("remoteVideo");
+  video.onclick = function() {
+    document.getElementById("video").mozRequestFullScreen();
+  };
+
+  resizeVideo();
+  window.addEventListener("resize", resizeVideo);
+}
+
 function callPerson(aPerson) {
   if (gChat)
     return;
@@ -82,6 +113,9 @@ function callPerson(aPerson) {
 
   $("#calling").show();
   document.getElementById("calleeName").textContent = aPerson;
+
+  if (!gChat.audioOnly)
+    fullScreenVideo();
 
   $("#call").show();
   $("#header").hide();
@@ -139,6 +173,10 @@ function setupEventSource() {
 
       if (!document.getElementById("shareCamera").checked)
         gChat.audioOnly = audioOnly = true;
+
+      if (!gChat.audioOnly)
+        fullScreenVideo();
+
       gChat.pc = webrtcMedia.handleOffer(data, window, audioOnly, onConnection, setupChat);
     };
   }, false);
@@ -228,6 +266,8 @@ function endCall() {
   document.getElementById("reject").onclick = null;
 
   webrtcMedia.endCall(gChat.pc, null, window, gChat.audioOnly);
+  if (!gChat.audioOnly)
+    window.removeEventListener("resize", resizeVideo);
   gChat = null;
 
   $("#call").hide();
