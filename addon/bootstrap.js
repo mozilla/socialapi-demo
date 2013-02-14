@@ -6,7 +6,7 @@ const kSidebarPage = "/sidebar.htm";
 const kSiteImageLocation = "/icon.png";
 const kPrefName = "social.manifest.webrtc-demo";
 const kUserImageLocation = "/icon.png";
-const kWrappsSiteURLPref = "addons.wrapps.siteURL";
+const kWrappsSiteURLPref = "addons.wrapps.social.siteURL";
 
 const BOOTSTRAP_REASONS = {
   APP_STARTUP     : 1,
@@ -20,6 +20,15 @@ const BOOTSTRAP_REASONS = {
 };
 
 let webrtcbrowser = {
+  currentSiteURL: null,
+
+  get siteURLPrefValue() {
+    let siteURL = kSiteURL;
+    if (Services.prefs.prefHasUserValue(kWrappsSiteURLPref))
+      siteURL = Services.prefs.getCharPref(kWrappsSiteURLPref);
+    return siteURL;
+  },
+
   get isCurrentProvider() {
     var currentProvider = "";
     try {
@@ -167,7 +176,36 @@ let webrtcbrowser = {
     }
   },
 
+  setDefaultProvider: function webrtcbrowser_setDefaultProvider(aSiteURL) {
+    if (!aSiteURL)
+      aSiteURL = kSiteURL;
+
+    if (this.currentSiteURL && this.currentSiteURL != aSiteURL)
+      removeActiveProvider(this.currentSiteURL);
+
+    this.currentSiteURL = aSiteURL;
+
+    Services.prefs.setCharPref(kPrefName, '{"location":"' + aSiteURL + '/manifest.json","name":"' + kSiteName + '","iconURL":"' + aSiteURL + kSiteImageLocation + '","workerURL":"' + aSiteURL + '/worker.js","sidebarURL":"' + aSiteURL + kSidebarPage + '","origin":"' + aSiteURL + '","enabled":true,"last_modified":135101330568}');
+    var activeProviders;
+    try {
+      activeProviders = JSON.parse(Services.prefs.getCharPref("social.activeProviders"));
+    } catch (x) {
+      activeProviders = {};
+    }
+
+    activeProviders[aSiteURL] = 1;
+    Services.prefs.setCharPref("social.activeProviders", JSON.stringify(activeProviders));
+    Services.prefs.setCharPref("social.provider.current", aSiteURL);
+
+    Services.prefs.setBoolPref("media.navigator.enabled", true);
+    Services.prefs.setBoolPref("media.navigator.permission.disabled", true);
+    Services.prefs.setBoolPref("media.peerconnection.enabled", true);
+    Services.prefs.setBoolPref("dom.disable_open_during_load", false);
+    Services.prefs.setBoolPref("social.enabled", true);
+  },
+
   init: function webrtcbrowser_init() {
+    this.currentSiteURL = this.siteURLPrefValue;
     Services.obs.addObserver(this, "social:profile-changed", false);
     this.setWidths();
     this.setStyle();
@@ -232,28 +270,8 @@ function shutdown(data, reason) {
 */
 }
 
-function setDefaultProvider(aSiteURL) {
-  Services.prefs.setCharPref(kPrefName, '{"location":"' + aSiteURL + '/manifest.json","name":"' + kSiteName + '","iconURL":"' + aSiteURL + kSiteImageLocation + '","workerURL":"' + aSiteURL + '/worker.js","sidebarURL":"' + aSiteURL + kSidebarPage + '","origin":"' + aSiteURL + '","enabled":true,"last_modified":135101330568}');
-  var activeProviders;
-  try {
-    activeProviders = JSON.parse(Services.prefs.getCharPref("social.activeProviders"));
-  } catch (x) {
-    activeProviders = {};
-  }
-
-  activeProviders[aSiteURL] = 1;
-  Services.prefs.setCharPref("social.activeProviders", JSON.stringify(activeProviders));
-  Services.prefs.setCharPref("social.provider.current", aSiteURL);
-
-  Services.prefs.setBoolPref("media.navigator.enabled", true);
-  Services.prefs.setBoolPref("media.navigator.permission.disabled", true);
-  Services.prefs.setBoolPref("media.peerconnection.enabled", true);
-  Services.prefs.setBoolPref("dom.disable_open_during_load", false);
-  Services.prefs.setBoolPref("social.enabled", true);
-}
-
 function prefChangeListener(aSubject, aTopic, aData) {
-  setDefaultProvider(Services.prefs.getCharPref(kWrappsSiteURLPref));
+  webrtcbrowser.setDefaultProvider(webrtcbrowser.siteURLPrefValue);
 }
 
 function install(data, reason) {
@@ -262,18 +280,22 @@ function install(data, reason) {
     case BOOTSTRAP_REASONS.ADDON_UPGRADE:
     case BOOTSTRAP_REASONS.ADDON_DOWNGRADE:
     {
-      var siteURL = kSiteURL;
-      if (Services.prefs.prefHasUserValue(kWrappsSiteURLPref))
-        siteURL = Services.prefs.getCharPref(kWrappsSiteURLPref);
-      else
-        Services.prefs.setCharPref(kWrappsSiteURLPref, siteURL);
-      setDefaultProvider(siteURL);
-
+      // Need to do this before init to ensure the preferences are set correctly
+      webrtcbrowser.setDefaultProvider(webrtcbrowser.siteURLPrefValue);
       webrtcbrowser.init();
       break;
     }
     default:
       break;
+  }
+}
+
+function removeActiveProvider(providerURL) {
+  try {
+    var activeProviders = JSON.parse(Services.prefs.getCharPref("social.activeProviders"));
+    delete activeProviders[providerURL];
+    Services.prefs.setCharPref("social.activeProviders", JSON.stringify(activeProviders));
+  } catch (x) {
   }
 }
 
@@ -287,13 +309,6 @@ function uninstall(data, reason) {
   Services.prefs.clearUserPref(kPrefName);
   Services.prefs.clearUserPref("social.provider.current");
 
-  var activeProviders;
-  try {
-    activeProviders = JSON.parse(Services.prefs.getCharPref("social.activeProviders"));
-    delete activeProviders[Services.prefs.getCharPref(kWrappsSiteURLPref)];
-    Services.prefs.setCharPref("social.activeProviders", JSON.stringify(activeProviders));
-  } catch (x) {
-    activeProviders = {};
-  }
+  removeActiveProvider(Services.prefs.getCharPref(kWrappsSiteURLPref));
   webrtcbrowser.uninit();
 }
