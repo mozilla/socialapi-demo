@@ -6,6 +6,7 @@ const kSidebarPage = "/sidebar.htm";
 const kSiteImageLocation = "/icon.png";
 const kPrefName = "social.manifest.webrtc-demo";
 const kUserImageLocation = "/icon.png";
+const kWrappsSiteURLPref = "addons.wrapps.siteURL";
 
 const BOOTSTRAP_REASONS = {
   APP_STARTUP     : 1,
@@ -68,6 +69,11 @@ let webrtcbrowser = {
     currentBrowser.attachFormFill = function() {};
 
     let tab = gBrowser.loadOneTab("about:blank", null, null, null, false);
+    if (currentBrowser.socialErrorListener) {
+      // Removing socialErrorListener fails after the docshells have been swapped.
+      currentBrowser.socialErrorListener.remove();
+      currentBrowser.socialErrorListener = {remove: function() {}};
+    }
     gBrowser.swapNewTabWithBrowser(tab, currentBrowser);
     this.selectedChat.close();
     aEvent.preventDefault(); // This lets the emitter of the event know it's been handled.
@@ -205,10 +211,14 @@ function startup(data, reason) {
       webrtcbrowser.init();
       break;
   }
+  Services.prefs.addObserver(kWrappsSiteURLPref, prefChangeListener, false);
+
 }
 
 function shutdown(data, reason) {
   webrtcbrowser.uninit();
+  Services.prefs.removeObserver(kWrappsSiteURLPref, prefChangeListener);
+
 /*
   switch(reason) {
     case BOOTSTRAP_REASONS.APP_SHUTDOWN:
@@ -222,29 +232,42 @@ function shutdown(data, reason) {
 */
 }
 
+function setDefaultProvider(aSiteURL) {
+  Services.prefs.setCharPref(kPrefName, '{"location":"' + aSiteURL + '/manifest.json","name":"' + kSiteName + '","iconURL":"' + aSiteURL + kSiteImageLocation + '","workerURL":"' + aSiteURL + '/worker.js","sidebarURL":"' + aSiteURL + kSidebarPage + '","origin":"' + aSiteURL + '","enabled":true,"last_modified":135101330568}');
+  var activeProviders;
+  try {
+    activeProviders = JSON.parse(Services.prefs.getCharPref("social.activeProviders"));
+  } catch (x) {
+    activeProviders = {};
+  }
+
+  activeProviders[aSiteURL] = 1;
+  Services.prefs.setCharPref("social.activeProviders", JSON.stringify(activeProviders));
+  Services.prefs.setCharPref("social.provider.current", aSiteURL);
+
+  Services.prefs.setBoolPref("media.navigator.enabled", true);
+  Services.prefs.setBoolPref("media.navigator.permission.disabled", true);
+  Services.prefs.setBoolPref("media.peerconnection.enabled", true);
+  Services.prefs.setBoolPref("dom.disable_open_during_load", false);
+  Services.prefs.setBoolPref("social.enabled", true);
+}
+
+function prefChangeListener(aSubject, aTopic, aData) {
+  setDefaultProvider(Services.prefs.getCharPref(kWrappsSiteURLPref));
+}
+
 function install(data, reason) {
   switch(reason) {
     case BOOTSTRAP_REASONS.ADDON_INSTALL:
     case BOOTSTRAP_REASONS.ADDON_UPGRADE:
     case BOOTSTRAP_REASONS.ADDON_DOWNGRADE:
     {
-      Services.prefs.setCharPref(kPrefName, '{"location":"' + kSiteURL + '/manifest.json","name":"' + kSiteName + '","iconURL":"' + kSiteURL + kSiteImageLocation + '","workerURL":"' + kSiteURL + '/worker.js","sidebarURL":"' + kSiteURL + kSidebarPage + '","origin":"' + kSiteURL + '","enabled":true,"last_modified":135101330568}');
-      Services.prefs.setCharPref("social.provider.current", kSiteURL);
-      var activeProviders;
-      try {
-        activeProviders = JSON.parse(Services.prefs.getCharPref("social.activeProviders"));
-      } catch (x) {
-        activeProviders = {};
-      }
-
-      activeProviders[kSiteURL] = 1;
-      Services.prefs.setCharPref("social.activeProviders", JSON.stringify(activeProviders));
-
-      Services.prefs.setBoolPref("media.navigator.enabled", true);
-      Services.prefs.setBoolPref("media.navigator.permission.disabled", true);
-      Services.prefs.setBoolPref("media.peerconnection.enabled", true);
-      Services.prefs.setBoolPref("dom.disable_open_during_load", false);
-      Services.prefs.setBoolPref("social.enabled", true);
+      var siteURL = kSiteURL;
+      if (Services.prefs.prefHasUserValue(kWrappsSiteURLPref))
+        siteURL = Services.prefs.getCharPref(kWrappsSiteURLPref);
+      else
+        Services.prefs.setCharPref(kWrappsSiteURLPref, siteURL);
+      setDefaultProvider(siteURL);
 
       webrtcbrowser.init();
       break;
@@ -267,7 +290,7 @@ function uninstall(data, reason) {
   var activeProviders;
   try {
     activeProviders = JSON.parse(Services.prefs.getCharPref("social.activeProviders"));
-    delete activeProviders[kSiteURL];
+    delete activeProviders[Services.prefs.getCharPref(kWrappsSiteURLPref)];
     Services.prefs.setCharPref("social.activeProviders", JSON.stringify(activeProviders));
   } catch (x) {
     activeProviders = {};
