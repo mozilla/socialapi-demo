@@ -5,17 +5,19 @@ var gFake = false;
 
 function startGuest() {
   $("#signin").hide();
-  $("#guest").html(
-    '<input type="text" id="user"/>' +
-    '<input type="button" value="Login" onclick="javascript:guestLogin();"/>'
+  $("#guest").html('<form onsubmit="javascript:guestLogin(event);">' +
+    ' <input type="text" id="user"/>' +
+    ' <input type="submit" value="Login"/>' +
+    '</form>'
   );
   $("#user").focus();
 }
 
-function guestLogin() {
+function guestLogin(event) {
   var user = $("#user").attr("value");
   remoteLogin({assertion: user, fake: true});
   gFake = true;
+  event.preventDefault();
 }
 
 function signedIn(aEmail) {
