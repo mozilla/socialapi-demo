@@ -1,11 +1,12 @@
 var webrtcChecks = {
   checkSupport: function webrtc_checkSupport(aDisplaySuccess) {
-    var support = this.hasWebRTC() && this.hasBrowserId();
-
-    if (!support)
+    if (!this.hasWebRTC())
       this.displayWarning();
-    else if (aDisplaySuccess)
-      this.displaySuccess();
+    else {
+      if (aDisplaySuccess)
+        this.displaySuccess();
+      this.checkPersona();
+    }
   },
 
   hasWebRTC: function webrtc_hasWebRTC() {
@@ -19,19 +20,23 @@ var webrtcChecks = {
     return true;
   },
 
-  hasBrowserId: function webrtc_hasBrowserId() {
-    return !!navigator.id;
-  },
-
   checkSidebarSupport: function webrtc_checkSidebarSupport() {
     if (!this.hasWebRTC())
       this.displaySidebarWarning();
 
-    if (!this.hasBrowserId()) {
-      webrtcMedia.hasInternetAccess = false;
-      $("#guest").show();
-      startGuest();
-    }
+    this.checkPersona();
+  },
+
+  checkPersona: function webrtc_checkPersona() {
+    if (navigator.id)
+      return;
+
+    // If Persona isn't available, we are likely on a network without
+    // Internet access, tell webrtcMedia about it and start guest login
+    // automatically.
+    webrtcMedia.hasInternetAccess = false;
+    $("#guest").show();
+    startGuest();
   },
 
   displayWarning: function webrtc_displayWarning() {
