@@ -1,40 +1,195 @@
-#userimg {
-  float: left;
-  margin: 10px;
+* {
+  padding: 0;
+  margin: 0;
 }
 
-button {
-  font-size: 18px;
-  margin: auto 5px;
+html {
+  background: #f9f9f9 linear-gradient(#c3c3c3 0px, #f9f9f9 160px) no-repeat;
+  border-top: 2px solid #fff;
+}
+
+body {
+  min-height: 200px;
+  padding: 15px;
+  max-width: 960px;
+  margin: 0 auto;
+  position: relative;
+  font: 14px/1.4 "Lucida Grande", Tahoma, sans-serif;
+  -moz-user-select: none;
+}
+
+a:link,
+a:visited {
+    color: #0096dd;
+    text-decoration: none;
+}
+
+a:hover,
+a:focus,
+a:active {
+    color: #0073aa;
+    text-decoration: underline;
+}
+
+#userimg {
+  float: left;
+  margin: 0 10px 10px 0;
+  border-radius: 3px;
+  border: 1px solid #ddd;
+}
+
+#nouserid,
+#useridbox {
+  font-size: 15px;
+  margin: 0 0 .5em;
+}
+
+#signin img {
+  margin: 0 0 .5em;
+  cursor: pointer;
+}
+
+#guest {
+  font-size: .857em;
+  margin: .5em 0;
+}
+
+#guest a {
+  display: inline-block;
+  padding: 2px 6px;
+  background: linear-gradient(#3c88cc, #306fa6);
+  color: #fff;
+  border-radius: 3px;
+}
+#guest input[type=text] {
+  font-size: inherit;
+  font-family: inherit;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid #bbb;
+}
+#guest input[type=text]:hover,
+#guest input[type=text]:focus {
+  border-color: #69c;
+}
+#guest input[type=submit] {
+  padding: 2px 6px;
+  background: linear-gradient(#3c88cc, #306fa6);
+  color: #fff;
+  border-radius: 3px;
+  border: 0;
+}
+
+button, 
+input[type=submit] {
+  font-size: inherit;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 2px 6px;
+  margin-right: 10px;
+  background: linear-gradient(#979797, #757575);
+  color: #fff;
+  border-radius: 3px;
+  border: 0;
 }
 
 #header {
+  position: relative;
   overflow: hidden;
-  height: auto;
+  background: linear-gradient(#fff, #f3f3f3);
+  border-radius: 6px;
+  padding: 10px;
+  margin: 0 0 1em;
+  box-shadow: 0 1px 0 rgba(0,0,0,.1);
 }
 
 #contactslist {
   list-style-type: none;
-  padding: 0px;
+  margin: 4px 0 20px;
+  border-top: 1px solid rgba(0,0,0,.1);
 }
 
-#remoteVideo {
+#contactslist li {
+  padding: 5px 0;
+  border-bottom: 1px solid rgba(0,0,0,.1);
+}
+
+#contactslist .callButton {
+  margin-left: 20px;
+}
+
+#localVideoContainer {
+  width: 30%;
+  float: right;
+  margin: 0 5px 20px 0;
+}
+
+#remoteVideoContainer {
+  width: 65%;
+  float: left;
+  margin: 0 0 20px 5px;
+}
+
+#remoteVideo,
+#localVideo {
   max-width: 100%;
 }
 
-#localVideo {
-  max-width: 50%;
+#callAnswer, 
+#calling {
+  display: block;
+  padding: 10px 100px 10px 10px;
+  background: linear-gradient(#eee, #e2e2e2);
+  border-radius: 8px;
+  border: 2px solid #ccc;
+  padding: 10px;
+  margin: 0 0 1em;
+  box-shadow: 0 1px 0 rgba(0,0,0,.1);
 }
 
-#callAnswer, #calling {
-  display: none;
-  padding-top: 1em;
+#accept {
+  margin: 1em 10px 0 0;
+  padding: 6px 10px;
+  background: linear-gradient(#86de8e, #41ba4c);
+}
+
+#reject,
+#closecall {
+  padding: 6px 10px;
+  background: linear-gradient(#d76969, #a22929);
 }
 
 #chat {
-  overflow: hidden;
-  height: 53px;
+  clear: both;
+  overflow: auto;
+  height: 5.75em;
+  padding: 10px;
+  margin: 20px auto 0;
+  border: 1px solid #ccc;
+  border-radius: 6px;
 }
+
+#chatform {
+  clear: both;
+  margin: 3px 0 10px;
+}
+
+#localChat {
+  width: 100%;
+  padding: 5px 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: inherit;
+  font-family: inherit;
+}
+
+#closecall {
+  position: absolute;
+  top: 22px;
+  right: 12px;
+}
+
+hr { display:none; }
 
 /*
  * 946 is the max width of the center area plus its padding

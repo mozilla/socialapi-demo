@@ -7,7 +7,7 @@ function startGuest() {
   $("#signin").hide();
   $("#guest").html('<form onsubmit="javascript:guestLogin(event);">' +
     ' <input type="text" id="user"/>' +
-    ' <input type="submit" value="Login"/>' +
+    ' <input type="submit" value="Sign in"/>' +
     '</form>'
   );
   $("#user").focus();
