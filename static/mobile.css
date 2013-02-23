@@ -137,7 +137,7 @@ input[type=submit] {
 
 #callAnswer, 
 #calling {
-  display: block;
+  display: none;
   padding: 10px 100px 10px 10px;
   background: linear-gradient(#eee, #e2e2e2);
   border-radius: 8px;
