@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
@@ -17,48 +18,57 @@
 </head>
 
 <body onload="webrtcChecks.checkSupport(false);onLoad();">
-<div id="supportwarning"></div>
-<div id="header">
-  <img id="userimg" src="./user.png"/>
-  <div id="nouserid">Welcome!</div>
-  <div id="useridbox" style="display:none">
+  <div id="supportwarning"></div>
+  
+  <div id="header">
+    <img id="userimg" src="./user.png"/>
+    <div id="nouserid">Welcome!</div>
+    <div id="useridbox" style="display:none"></div>
+    
+    <div id="signin" style="display:none">
+      <img src="plain_sign_in_black.png" onclick="signin()" alt="Sign in">
+      <div id="signin_error"></div>
+    </div>
+    
+    <div id="guest" style="display:none">
+      <a href="javascript:startGuest();">Guest Mode</a>
+    </div>
+    
+    <div id="signout" style="display:none">
+      <button onclick="onSignout()">Sign out</button>
+      <br><br>
+      <label for="shareCamera"><input type="checkbox" id="shareCamera"> Share my camera</label>
+    </div>
   </div>
-  <div id="signin" style="display:none">
-    <img src="plain_sign_in_black.png" onclick="signin()"/>
-    <div id="signin_error"></div>
+  
+  <div id="callAnswer">
+    Incoming call from: <span id="callerName"></span><br>
+    <button id="accept">Accept</button><button id="reject">Reject</button>
   </div>
-  <div id="guest" style="display:none">
-    <a href="javascript:startGuest();">Guest Mode</a>
+  
+  <div id="calling">
+    Calling: <span id="calleeName"></span>
   </div>
-  <div id="signout" style="display:none"><button onclick="onSignout()">signout</button>
-  <br><br><label><input type="checkbox" id="shareCamera"/>Share my camera</label></div>
-</div>
-<div id="callAnswer">
-<hr>
-  Incoming call from: <span id="callerName"></span><br>
-  <button id="accept">Accept</button><button id="reject">Reject</button>
-</div>
-<div id="calling"><hr>
-  Calling: <span id="calleeName"></span>
-</div>
-<div id="contacts"><hr>
-Users:
-<ul id="contactslist"></ul>
-</div>
-<div id="call" style="display:none">
-  <div id="video">
-    <video id="remoteVideo"></video>
-    <video id="localVideo" muted></video>
+  
+  <div id="contacts">
+  Users:
+  <ul id="contactslist"></ul>
   </div>
-  <div id="chat"></div>
-  <form id="chatForm">
-    <input id="localChat" type="text" disabled="true"/>
-    <input type="submit" style="display:none;"/>
-  </form>
-  <button id="closecall" onclick="closeCall();">End Call</button>
-  <audio id="localAudio" muted></audio>
-  <audio id="remoteAudio"></audio>
-</div>
+  
+  <div id="call" style="display:none">
+    <div id="video">
+      <video id="remoteVideo"></video>
+      <video id="localVideo" muted></video>
+    </div>
+    <div id="chat"></div>
+    <form id="chatForm">
+      <input id="localChat" type="text" disabled="true"/>
+      <input type="submit" style="display:none;"/>
+    </form>
+    <button id="closecall" onclick="closeCall();">End Call</button>
+    <audio id="localAudio" muted></audio>
+    <audio id="remoteAudio"></audio>
+  </div>
 
 </body>
 </html>

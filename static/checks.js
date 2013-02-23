@@ -40,8 +40,8 @@ var webrtcChecks = {
   },
 
   displayWarning: function webrtc_displayWarning() {
-    $("#supportwarning").append('<p><img src="defaultWarningIcon.png"/> To run this demo, please first install and latest <a href="https://nightly.mozilla.org/">Nightly</a> version of Mozilla Firefox.</p>' +
-      '<p>Then install <a href="webrtc.xpi">this add-on</a>. You may need to restart for the social api update to take full effect.</p>');
+    $("#supportwarning").append('<p>To run this demo, please first install and latest <a href="https://nightly.mozilla.org/">Nightly</a> version of Mozilla Firefox.</p>' +
+      '<p>Then install <a href="webrtc.xpi">this add-on</a>. You may need to restart for the social api update to take full effect.</p>').show();
   },
 
   displaySuccess: function webrtc_displaySuccess() {
@@ -50,11 +50,11 @@ var webrtcChecks = {
       '<li>or install <a href="webrtc.xpi">this add-on</a> to access it via the SocialAPI.</li>' +
       '<ul><li><i>Note: you may need to restart after installing the add-on for the social API to fully start</i></li></ul>' +
       '</ul>' +
-      '<p>If you get issues, please try running the latest <a href="https://nightly.mozilla.org/">nightly of Firefox</p>');
+      '<p>If you get issues, please try running the latest <a href="https://nightly.mozilla.org/">nightly of Firefox</p>').show();
 
   },
 
   displaySidebarWarning: function webrtc_displaySidebarWarning() {
-    $("#supportwarning").append("<p>Your browser is not set up correctly or is not the right version, please <a href='/' target='_blank'>visit the homepage</a> for instructions on how to set it up.</p>");
+    $("#supportwarning").append("<p>Your browser is not set up correctly or is not the right version, please <a href='/' target='_blank'>visit the homepage</a> for instructions on how to set it up.</p>").show();
   }
 }
