@@ -283,6 +283,12 @@ function setupExpandHandler(win) {
   };
 }
 
+function hideVideo(aDoc) {
+  aDoc.getElementById("fullTab").style.display = "none";
+  aDoc.getElementById("video").style.display = "none";
+  aDoc.getElementById("chat").setAttribute("style", "top: 0; height: 246px;");
+}
+
 function setupEventSource() {
   var source = new EventSource("events?source=sidebar");
   source.onerror = function(e) {
@@ -344,8 +350,11 @@ function setupEventSource() {
       };
       doc.getElementById("accept").onclick = function() {
         doc.getElementById("callAnswer").style.display = "none";
-        gChats[from].pc = webrtcMedia.handleOffer(data, win, gChats[from].audioOnly,
-                                                  onConnection, setupFileSharing);
+        var chat = gChats[from];
+        chat.pc = webrtcMedia.handleOffer(data, win, chat.audioOnly,
+                                          onConnection, setupFileSharing);
+        if (chat.audioOnly)
+          hideVideo(chat.win.document);
       };
     });
   }, false);
@@ -353,18 +362,21 @@ function setupEventSource() {
   source.addEventListener("answer", function(e) {
     var data = JSON.parse(e.data);
     var chat = gChats[data.from];
+    var doc = chat.win.document;
     var answer = JSON.parse(data.request);
     var pc = chat.pc;
     if (!chat.audioOnly && answer.sdp.indexOf("m=video") == -1) {
       chat.audioOnly = true;
-      var audio = chat.win.document.getElementById("localAudio");
-      var video = chat.win.document.getElementById("localVideo");
+      var audio = doc.getElementById("localAudio");
+      var video = doc.getElementById("localVideo");
       // Using the audio+video stream as audio only has the
       // unfortunate effect of keeping the webcam active...
       audio.mozSrcObject = video.mozSrcObject;
       video.mozSrcObject = null;
     }
-    chat.win.document.getElementById("calling").style.display = "none";
+    doc.getElementById("calling").style.display = "none";
+    if (chat.audioOnly)
+      hideVideo(doc);
     pc.setRemoteDescription(answer, function() {
       // Nothing to do for the audio/video. The interesting things for
       // them will happen in onaddstream.
