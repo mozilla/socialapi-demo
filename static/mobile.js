@@ -93,9 +93,17 @@ function resizeVideo() {
   localVideo.style.left = (width - 108) + "px";
 }
 
-function fullScreenVideo() {
-  document.getElementById("closecall").setAttribute("style",
-    "position: absolute; top: 0; right: 0; margin: 0 0; z-index: 3;");
+function setupVideo() {
+  if (gChat.audioOnly) {
+    $("#video").hide();
+    $("#calling").show();
+    document.getElementById("calleeName").textContent = gChat.who;
+    document.getElementById("closecall").setAttribute("class", "audioOnly");
+    return;
+  }
+
+  $("#video").show();
+  document.getElementById("closecall").setAttribute("class", "videoCall");
 
   var video = document.getElementById("remoteVideo");
   video.onclick = function() {
@@ -113,11 +121,7 @@ function callPerson(aPerson) {
   gChat = {who: aPerson,
            audioOnly: !document.getElementById("shareCamera").checked};
 
-  $("#calling").show();
-  document.getElementById("calleeName").textContent = aPerson;
-
-  if (!gChat.audioOnly)
-    fullScreenVideo();
+  setupVideo();
 
   $("#call").show();
   $("#header").hide();
@@ -176,8 +180,7 @@ function setupEventSource() {
       if (!document.getElementById("shareCamera").checked)
         gChat.audioOnly = audioOnly = true;
 
-      if (!gChat.audioOnly)
-        fullScreenVideo();
+      setupVideo();
 
       gChat.pc = webrtcMedia.handleOffer(data, window, audioOnly, onConnection, setupChat);
     };
@@ -185,6 +188,24 @@ function setupEventSource() {
 
   source.addEventListener("answer", function(e) {
     var data = JSON.parse(e.data);
+
+    var answer = JSON.parse(data.request);
+    if (!gChat.audioOnly && answer.sdp.indexOf("m=video") == -1) {
+      // If the other party answered with audio only, switch the
+      // display back to showing the chat.
+      gChat.audioOnly = true;
+
+      var audio = document.getElementById("localAudio");
+      var video = document.getElementById("localVideo");
+      // Using the audio+video stream as audio only has the
+      // unfortunate effect of keeping the webcam active...
+      audio.mozSrcObject = video.mozSrcObject;
+      video.mozSrcObject = null;
+
+      window.removeEventListener("resize", resizeVideo);
+      setupVideo();
+    }
+
     var pc = gChat.pc;
     pc.setRemoteDescription(JSON.parse(data.request), function() {
       // Nothing to do for the audio/video. The interesting things for
