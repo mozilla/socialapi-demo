@@ -109,23 +109,6 @@ function signedOut() {
 }
 
 function onConnection(aWin, aPc, aPerson, aOriginator) {
-  // Do we need to set up a data connection itself?
-  if (aOriginator)
-    setupFileSharing(aWin, aPc.createDataChannel("SocialAPI", {}), aPerson);
-
-  // Now set up the chat interface
-  aWin.document.getElementById("chatForm").onsubmit = function() {
-    var localChat = aWin.document.getElementById("localChat");
-    var message = localChat.value;
-    gChats[aPerson].dc.send(message);
-    localChat.value = "";
-    // XXX: Sometimes insertChatMessage throws an exception, don't know why yet.
-    try {
-      insertChatMessage(aWin, "Me", message);
-    } catch(e) {}
-    return false;
-  };
-  aWin.document.getElementById("localChat").removeAttribute("disabled");
 }
 
 function insertChatMessage(win, from, message) {
@@ -179,19 +162,34 @@ function gotChat(win, evt) {
   }
 }
 
-function setupFileSharing(win, dc, target) {
+function setupFileSharing(aWin, aIncomingChannel, aOutgoingChannel, aTarget) {
   /* Setup data channel */
-  dc.binaryType = "blob";
-  dc.onmessage = function(evt) {
-    gotChat(win, evt);
+  aOutgoingChannel.binaryType = "blob";
+  aIncomingChannel.onmessage = function(evt) {
+    gotChat(aWin, evt);
   };
-  gChats[target].dc = dc;
+  gChats[aTarget].incomingChannel = aIncomingChannel;
+  gChats[aTarget].outgoingChannel = aOutgoingChannel;
 
   /* Setup drag and drop for file transfer */
-  var box = win.document.getElementById("content");
+  var box = aWin.document.getElementById("content");
   box.addEventListener("dragover", ignoreDrag, false);
   box.addEventListener("dragleave", ignoreDrag, false);
   box.addEventListener("drop", handleDrop, false);
+
+  // Now set up the chat interface
+  aWin.document.getElementById("chatForm").onsubmit = function() {
+    var localChat = aWin.document.getElementById("localChat");
+    var message = localChat.value;
+   aOutgoingChannel.send(message);
+    localChat.value = "";
+    // XXX: Sometimes insertChatMessage throws an exception, don't know why yet.
+    try {
+      insertChatMessage(aWin, "Me", message);
+    } catch(e) {}
+    return false;
+  };
+  aWin.document.getElementById("localChat").removeAttribute("disabled");
 
   function ignoreDrag(e) {
     e.stopPropagation();
@@ -199,9 +197,9 @@ function setupFileSharing(win, dc, target) {
     e.dataTransfer.dropEffect = "copy";
 
     if (e.type == "dragover") {
-      win.document.getElementById("fileDrop").style.display = "block";
+      aWin.document.getElementById("fileDrop").style.display = "block";
     } else {
-      win.document.getElementById("fileDrop").style.display = "none";
+      aWin.document.getElementById("fileDrop").style.display = "none";
     }
   }
 
@@ -210,15 +208,15 @@ function setupFileSharing(win, dc, target) {
     var files = e.target.files || e.dataTransfer.files;
     if (files.length) {
       for (var i = 0, f; f = files[i]; i++) {
-        dc.send(JSON.stringify({type: "file", filename: f.name}));
-        dc.send(f);
+        aOutgoingChannel.send(JSON.stringify({type: "file", filename: f.name}));
+        aOutgoingChannel.send(f);
       }
     } else {
       var url = e.dataTransfer.getData("URL");
       if (!url.trim()) {
         url = e.dataTransfer.mozGetDataAt("text/x-moz-text-internal", 0);
       }
-      dc.send(JSON.stringify({type: "url", url: url}));
+      aOutgoingChannel.send(JSON.stringify({type: "url", url: url}));
     }
   }
 }
@@ -380,9 +378,6 @@ function setupEventSource() {
     pc.setRemoteDescription(answer, function() {
       // Nothing to do for the audio/video. The interesting things for
       // them will happen in onaddstream.
-      // We need to establish the data connection though.
-      if (data.callerPort && data.calleePort)
-        pc.connectDataConnection(data.callerPort, data.calleePort);
     }, function(err) {alert("failed to setRemoteDescription with answer, " + err);});
   }, false);
 
@@ -398,7 +393,8 @@ function setupEventSource() {
       // The chat to close doesn't exist any more...
       return;
     }
-    webrtcMedia.endCall(chat.pc, chat.dc, chat.win, chat.audioOnly);
+    webrtcMedia.endCall(chat.pc, chat.incomingChannel, chat.outgoingChannel,
+                        chat.win, chat.audioOnly);
     delete gChats[data.from];
     chat.win.close();
   });

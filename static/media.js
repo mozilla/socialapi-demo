@@ -46,25 +46,15 @@ var webrtcMedia = {
                                .join("m=");
           }
           pc.setLocalDescription(answer, function() {
-            var randomPort = function() {
-              return Math.round(Math.random() * 60535) + 5000;
-            };
-            var localPort = randomPort();
-            var remotePort = randomPort();
-            while (remotePort == localPort) // Avoid being extremely unlucky...
-              remotePort = randomPort();
             $.ajax({
               type: 'POST',
               url: '/answer',
               contentType: 'application/json',
               data: JSON.stringify({
                 to: aData.from,
-                request: JSON.stringify(answer),
-                callerPort: remotePort,
-                calleePort: localPort
+                request: JSON.stringify(answer)
               })
             });
-            pc.connectDataConnection(localPort, remotePort);
           }, function(err) {alert("failed to setLocalDescription, " + err);});
         }, function(err) {alert("failed to createAnswer, " + err);});
       }, true);
@@ -73,7 +63,8 @@ var webrtcMedia = {
     return pc;
   },
 
-  endCall: function webrtcMedia_stopCall(aPc, aDc, aWin, aAudioOnly) {
+  endCall: function webrtcMedia_stopCall(aPc, aIncomingChannel, aOutgoingChannel,
+                                         aWin, aAudioOnly) {
     var mediaElements = ["remoteAudio"];
     if (!aAudioOnly)
       mediaElements = mediaElements.concat("remoteVideo", "localVideo");
@@ -93,10 +84,12 @@ var webrtcMedia = {
       element.mozSrcObject = null;
     });
 
+    if (aIncomingChannel)
+      aIncomingChannel.close();
+    if (aOutgoingChannel)
+      aOutgoingChannel.close();
     if (aPc)
       aPc.close();
-    if (aDc)
-      aDc.close();
   },
 
   _createBasicPc: function webrtcMedia_createBasicPc(aWin, aPerson, aOriginator, aAudioOnly,
@@ -106,6 +99,7 @@ var webrtcMedia = {
     if (!this.hasInternetAccess)
       params = {iceServers: []};
     var pc = new aWin.mozRTCPeerConnection(params);
+
     pc.onaddstream = function(obj) {
       var type = obj.type;
       if (type == "video") {
@@ -120,17 +114,23 @@ var webrtcMedia = {
         alert("sender onaddstream of unknown type, obj = " + obj.toSource());
       }
     };
-    pc.ondatachannel = function(aChannel) {
-      if (aDataConnectionCallback)
-        aDataConnectionCallback(aWin, aChannel, aPerson);
-    };
+
     pc.onconnection = function() {
       if (aConnectionCallback) {
         aConnectionCallback(aWin, pc, aPerson, aOriginator);
       }
     };
+
     pc.onclosedconnection = function(obj) {
     };
+
+    var chan = pc.createDataChannel("SocialAPI");
+
+    pc.ondatachannel = function(aEvent) {
+      if (aDataConnectionCallback)
+        aDataConnectionCallback(aWin, chan, aEvent.channel, aPerson);
+    };
+
     return pc;
   },
 
