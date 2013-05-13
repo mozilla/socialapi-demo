@@ -2,6 +2,8 @@ var gUsername;
 var gContacts = {};
 var gChat;
 var gFake = false;
+var gIncomingChannel;
+var gOutgoingChannel;
 
 function startGuest() {
   $("#signin").hide();
@@ -210,9 +212,6 @@ function setupEventSource() {
     pc.setRemoteDescription(JSON.parse(data.request), function() {
       // Nothing to do for the audio/video. The interesting things for
       // them will happen in onaddstream.
-      // We need to establish the data connection though.
-      if (data.callerPort && data.calleePort)
-        pc.connectDataConnection(data.callerPort, data.calleePort);
     }, function(err) {alert("failed to setRemoteDescription with answer, " + err);});
   }, false);
 
@@ -233,13 +232,14 @@ function setupEventSource() {
 }
 
 function onConnection(aWin, aPc, aPerson, aOriginator) {
-  if (aOriginator)
-    setupChat(aWin, aPc.createDataChannel("SocialAPI", {}));
 }
 
-function setupChat(aWin, aChannel) {
-  aChannel.binaryType = "blob";
-  aChannel.onmessage = function(evt) {
+function setupChat(aWin, aIncomingChannel, aOutgoingChannel) {
+  gIncomingChannel = aIncomingChannel;
+  gOutgoingChannel = aOutgoingChannel;
+
+  aOutgoingChannel.binaryType = "blob";
+  aIncomingChannel.onmessage = function(evt) {
     try {
       var details = JSON.parse(evt.data);
       if (details.type == "url")
@@ -249,12 +249,12 @@ function setupChat(aWin, aChannel) {
     } catch(e) {
       insertChatMessage("Them", evt.data);
     }
-  }
+  };
 
   document.getElementById("chatForm").onsubmit = function() {
     var localChat = document.getElementById("localChat");
     var message = localChat.value;
-    aChannel.send(message);
+    aOutgoingChannel.send(message);
     localChat.value = "";
     insertChatMessage("Me", message);
     return false;
@@ -288,7 +288,8 @@ function endCall() {
   document.getElementById("accept").onclick = null;
   document.getElementById("reject").onclick = null;
 
-  webrtcMedia.endCall(gChat.pc, null, window, gChat.audioOnly);
+  webrtcMedia.endCall(gChat.pc, gIncomingChannel, gOutgoingChannel, window,
+                      gChat.audioOnly);
   if (!gChat.audioOnly)
     window.removeEventListener("resize", resizeVideo);
   gChat = null;
