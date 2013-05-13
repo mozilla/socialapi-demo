@@ -181,7 +181,7 @@ function setupFileSharing(aWin, aIncomingChannel, aOutgoingChannel, aTarget) {
   aWin.document.getElementById("chatForm").onsubmit = function() {
     var localChat = aWin.document.getElementById("localChat");
     var message = localChat.value;
-   aOutgoingChannel.send(message);
+    aOutgoingChannel.send(message);
     localChat.value = "";
     // XXX: Sometimes insertChatMessage throws an exception, don't know why yet.
     try {
